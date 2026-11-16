@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <title>Outojen Keskustelujen Kylä</title>
+  <style>
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      background-color: #1a1a2e;
+      color: #eaeaea;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    #game-container {
+      background-color: #16213e;
+      border: 3px solid #0f3460;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 700px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+    h1 {
+      text-align: center;
+      color: #e94560;
+      margin-top: 0;
+      font-size: 24px;
+    }
+    #npc-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .npc-btn {
+      background-color: #0f3460;
+      color: #fff;
+      border: 2px solid #e94560;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+    .npc-btn:hover, .npc-btn.active {
+      background-color: #e94560;
+    }
+    #dialogue-box {
+      background-color: #0f3460;
+      padding: 20px;
+      border-radius: 8px;
+      min-height: 110px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    #npc-avatar {
+      font-size: 50px;
+      background: #1a1a2e;
+      padding: 10px;
+      border-radius: 50%;
+      user-select: none;
+    }
+    #npc-name {
+      font-weight: bold;
+      color: #e94560;
+      margin-bottom: 5px;
+      font-size: 18px;
+    }
+    #npc-text {
+      line-height: 1.5;
+    }
+    #choices {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .choice-btn {
+      background-color: #1a1a2e;
+      color: #eaeaea;
+      border: 1px solid #4ecca3;
+      padding: 12px 15px;
+      border-radius: 6px;
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 15px;
+      transition: 0.2s;
+    }
+    .choice-btn:hover {
+      background-color: #4ecca3;
+      color: #1a1a2e;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<a href="valikko3.html">
+    <button style="position:absolute; top:10px; right:10px; padding:10px 14px; font-size:16px; cursor:pointer;">⬅️ Takaisin</button>
+</a>
+
+<a href="info2.html">
+    <button style="position:absolute; top:60px; right:10px; padding:8px 12px; font-size:14px; cursor:pointer;">Tietoa</button>
+</a>
+
+<div id="game-container">
+  <h1>🌀 Outojen Keskustelujen Kylä</h1>
+  
+  <div id="npc-selector">
+    <button class="npc-btn active" onclick="selectNPC('ritari', this)">Matti Kalainen</button>
+    <button class="npc-btn" onclick="selectNPC('kauppias', this)">Casa Ouh</button>
+    <button class="npc-btn" onclick="selectNPC('kissa', this)">MinäNäytänNopeus</button>
+	<button class="npc-btn" onclick="selectNPC('jaska', this)">Jaska Silmä</button>
+<button class="npc-btn" onclick="selectNPC('kaisa', this)">Kaisa Senappi</button>
+<button class="npc-btn" onclick="selectNPC('peto', this)">Herra Peto</button>
+<button class="npc-btn" onclick="selectNPC('piiras', this)">PiuPiuPiiras</button>
+<button class="npc-btn" onclick="selectNPC('gotham', this)">Gothamin Shakki</button>
+<button class="npc-btn" onclick="selectNPC('Jynkky', this)">Jynkky</button>
+<button class="npc-btn" onclick="selectNPC('pengviini', this)">Pengviini Nolla</button>
+<button class="npc-btn" onclick="selectNPC('louis', this)">LauriOhoo</button>
+<button class="npc-btn" onclick="selectNPC('tyler', this)">Taavi Vihreätausta</button>
+<button class="npc-btn" onclick="selectNPC('Hxssu', this)">Hxssu</button>
+
+  </div>
+
+  <div id="dialogue-box">
+    <div id="npc-avatar">🐟</div>
+    <div>
+      <div id="npc-name">Matti Kalainen</div>
+      <div id="npc-text">Blub blub! Kuka seisoo laiturillani ja häiritsee ahventen päiväunia?</div>
+    </div>
+  </div>
+
+  <div id="choices"></div>
+</div>
+
+<script>
+  const npcs = {
+    ritari: {
+      name: "Matti Kalainen",
+      avatar: "🎧",
+      nodes: {
+        start: {
+          text: "Tervehdys kaikki, minun nimeni on tervetuloa... eikun Matti Kalainen! Kuka siellä ruudun toisella puolella on?",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "Oliko tuo vuoden -87 purenta?!", next: "purenta" },
+            { text: "Miksi sinulla on punainen tukka ja vaaleanpunaiset viikset?", next: "viikset" }
+          ]
+        },
+        hei: {
+          text: "Hei, Hei! Minun nimeni on tervetuloa, ja sinun nimesi on hei. Tämä on selvästi täydellinen alku kauhupelille!",
+          choices: [
+            { text: "Olen animatronic-karhu.", next: "karhu" },
+            { text: "En pelkää mitään, paitsi lusikoita.", next: "lusikka" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        purenta: {
+          text: "OLIKO TUO VUODEN -87 PURENTA?! *Matti Kalainen tuijottaa kameraan suu auki ja osoittaa sormella kohti tyhjää nurkkaa.*",
+          choices: [
+            { text: "Ei, se oli vain naapurin kultakala.", next: "kala" },
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        viikset: {
+          text: "Nämä eivät ole mitkä tahansa viikset! Nämä ovat Warfstache-viikset, ja ne antavat minulle +100 karismaa ja syvän äänen!",
+          choices: [
+            { text: "Äänesi kuulostaa ihan samettiselta ukkoselta.", next: "aani" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        karhu: {
+          text: "*Matti Kalainen tarkistaa paniikissa valvontakameroita ja sulkee molemmat teräsovet nenäsi edestä. Virtaa on jäljellä 2%.*",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        lusikka: {
+          text: "Ymmärrän täysin. Minä taas en ole masokisti, haluan vain testata paljonko kehoni kestää tulisia kastikkeita!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        kala: {
+          text: "Ahaa! No sitten se oli vuoden -87 näykkäisy. Nähdään seuraavassa videossa, heippa-heippa!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        aani: {
+          text: "*Matti Kalainen nyökkää syvällä äänellään.* Kiitos. Muista tilata kanava ja hakata tykkäysnappia, Hei!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        }
+      }
+    },
+	
+
+    kauppias: {
+      name: "Casa Ouh",
+      avatar: "🧀",
+      nodes: {
+        start: {
+          text: "Ouh! CaseOh... eikun Casa Ouh täällä! Kuka söi minun varajuustoni ja katsoi minua silmiin?",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "*Kääntyy 360 astetta ja kävelee pois*", next: "kaannos" },
+            { text: "Näytät ihan 1x1 Lego-palikalta.", next: "lego" }
+          ]
+        },
+        hei: {
+          text: "Ouh, Hei! Hauska tavata! Onko sinulla taskussa yhtään ylimääräistä juustohampurilaista?",
+          choices: [
+            { text: "Taskussani on vain tuulta ja yksi nöyhtäpallo.", next: "noyhta" },
+            { text: "Minä olen se juustohampurilainen.", next: "hampurilainen" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        kaannos: {
+          text: "OUH! Sinä et voi vain pyörähtää ympäri ja kävellä suoraan minua päin! Porttikielto!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        lego: {
+          text: "MITÄ SINÄ SANOIT?! SE OLI SIINÄ! Sinulla on porttikielto tästä keskustelusta! BÄNNIT!",
+          choices: [
+            { text: "Anteeksi, tarkoitin 2x2 palikkaa.", next: "hampurilainen" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        noyhta: {
+          text: "Harmi. Nöyhtäpallo ei kelpaa välipalaksi, vaikka sen paistaisi voissa.",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        hampurilainen: {
+          text: "*Casa Ouh tuijottaa sinua nälkäisenä ja kaivaa taskustaan jättimäisen haarukan... Nyt kannattaa juosta!*",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        }
+      }
+    },
+	
+	    jaska: {
+      name: "Jaska Silmä",
+      avatar: "🔔",
+      nodes: {
+        start: {
+          text: "*LÄPS!* HUOMENTA KAIKILLE, MINUN NIMENI ON JASKA SILMÄ! *Heiluttaa messinkikelloa korvasi juureen.* MITÄ KUULUU?!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "Korvani soivat nyt seuraavat kolme viikkoa.", next: "korvat" },
+            { text: "Pidätkö perunoista?", next: "peruna" }
+          ]
+        },
+        hei: {
+          text: "*LÄPS!* HEI, HEI! ONPA ENERGINEN NIMI! HALUATKO JUODA KUPIN KAHVIA VAI HAKATA VALKOTAULUA?!",
+          choices: [
+            { text: "Olen itse asiassa vihreä silmämuna.", next: "sam" },
+            { text: "Juon vain lämmintä kurkkuvettä.", next: "vesi" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        korvat: {
+          text: "SE ON HYVÄ MERKKI! *DING DING DING!* AAMUKAHVIN KELLO SOI!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        peruna: {
+          text: "PERUNAT OVAT ELÄMÄN ELIKSIIRI! Keitettynä, paistettuna tai suoraan taskusta syötynä!",
+          choices: [
+            { text: "Taskussani on yksi kylmä muusi.", next: "muusi" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        sam: {
+          text: "SEPTIC SAM?! OLETKO SE SINÄ?! *Jaska Silmä halaa sinua niin lujaa, että silmäripsesi irtoavat.*",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        vesi: {
+          text: "LÄMMINTÄ KURKKUVETTÄ?! *Jaska Silmä tuijottaa sinua epäuskoisena ja tiputtaa kellonsa lattialle.*",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        muusi: {
+          text: "MAAHTAVAA! Pidä siitä hyvä huoli, Hei! *LÄPS!* Nähdään taas!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        }
+      }
+    },
+
+    kaisa: {
+      name: "Kaisa Senappi",
+      avatar: "🔥",
+      nodes: {
+        start: {
+          text: "AYOOOO CHAT! Kaisa Senappi täällä! Mitä tapahtuu?! Miksi sinä seisot siinä noin epäilyttävästi?!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "Tulin keräämään fanum-veron sinun eväistäsi.", next: "fanum" },
+            { text: "*Alkaa tanssia keskellä huonetta ilman musiikkia*", next: "tanssi" }
+          ]
+        },
+        hei: {
+          text: "NAHHH BRO! Sinun nimesi on HEI?! W CHAT! Kirjoittakaa W chattiin jos Hei on legenda!",
+          choices: [
+            { text: "Olen itse asiassa L-kirjain.", next: "lkirjain" },
+            { text: "Missä sinun rizzisi on?", next: "rizz" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        fanum: {
+          text: "EI FANUM-VEROA TÄNÄÄN! *Kaisa Senappi piilottaa pizzalaatikon selkänsä taakse ja huutaa 'GOD DID!'*",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        tanssi: {
+          text: "AYO! HÄN LÄHTI LIIKKEELLE! *Kaisa Senappi hyppää pöydälle ja alkaa tanssia mukana täydellä teholla.*",
+          choices: [
+            { text: "Polveni naksahti.", next: "polvi" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        lkirjain: {
+          text: "BRO ON L-KIRJAIN?! Ei hätää, me käännetään se W:ksi! Tästä tulee elokuva!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        rizz: {
+          text: "Minulla on loputon rizz, Hei! Kysy vaikka chatilta!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        polvi: {
+          text: "LÄÄKÄRI PAIKALLE! CHAT, HÄNEN POLVENSA NAKSAHTI! *Kaisa Senappi pyörtyy draaman vuoksi sohvalle.*",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        }
+      }
+    },
+
+    peto: {
+      name: "Herra Peto",
+      avatar: "💵",
+      nodes: {
+        start: {
+          text: "*Hymyilee leveästi räpyttämättä silmiään.* JUURI NYT RAKENSIN TÄMÄN HUONEEN YMPÄRILLESI! Jos pysyt täällä 100 päivää, saat miljoona euroa!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "Voinko syödä tämän rahasalkun?", next: "salkku" },
+            { text: "Olen ollut täällä jo vuodesta 2012.", next: "vuosi" }
+          ]
+        },
+        hei: {
+          text: "TERVE HEI! Jos tilaat kanavan seuraavan viiden sekunnin aikana, ostan sinulle yksityissaaren ja kolme lammasta!",
+          choices: [
+            { text: "Haluan vain yhden märän sukan.", next: "sukka" },
+            { text: "Olen jo tilannut seitsemällä eri tilillä.", next: "tilit" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        salkku: {
+          text: "SE ON TEHTY SUKLAASTA! Ostin maailman suurimman suklaasalkun vain tätä hetkeä varten!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        vuosi: {
+          text: "USKOMATONTA! Sinä olet voittanut haasteen! *Katon läpi sataa 50 000 ilmapalloa ja neljä henkilöautoa.*",
+          choices: [
+            { text: "Minulla ei ole ajokorttia.", next: "ajokortti" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        sukka: {
+          text: "SELVÄ! Ostin juuri koko sukkatehtaan ja kastelin kaikki sukat sinua varten!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        tilit: {
+          text: "LEGENDAA! Tässä on 10 000 euroa käteisenä, Hei! *Herra Peto ojentaa sinulle kultaisen ostoskärryn.*",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        ajokortti: {
+          text: "EI HAITTAA! Ostin juuri koko tieverkoston, joten et tarvitse korttia! *Hymyilee edelleen kameraan.*",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        }
+      }
+    },
+	
+	    piiras: {
+      name: "PiuPiuPiiras",
+      avatar: "👊",
+      nodes: {
+        start: {
+          text: "MITEN MENEE VELJET! Minun nimeni on PIUPIUPIIRAS! *Hakkaa tamburiinia hurjana.* Miksi sinä seisot, kun voit olla Lattiajengiä?!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "Minä olen Kattojengiä.", next: "katto" },
+            { text: "Missä mopsi Edgar on?", next: "edgar" }
+          ]
+        },
+        hei: {
+          text: "*LÄPSÄYTTÄÄ TAMBURIINIA* Terve Hei! Oletko tilannut kanavan vai oletko salaa Cocomelonin vakooja?!",
+          choices: [
+            { text: "Olen itse asiassa vesimeloni.", next: "meloni" },
+            { text: "Minulla on 399 euroa maksava pelituoli.", next: "tuoli" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        katto: {
+          text: "KATTOJENGIÄ?! *PiuPiuPiiras sylkäisee lattialle ja tuijottaa sinua järkyttyneenä.* Poistu silmistäni, petturi!",
+          choices: [
+            { text: "Anteeksi, istun heti lattialle.", next: "lattia" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        edgar: {
+          text: "*Mopsi Edgar kävelee huoneeseen, tuijottaa sinua tyhjällä katseella ja nukahtaa keskelle lattiaa.* Hän on kuningas.",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        meloni: {
+          text: "COCOMELON?! *PiuPiuPiiras kaivaa esiin jättimäisen tamburiinitornin ja alkaa soittaa sota-hymniä.*",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        tuoli: {
+          text: "MUTTA VOIKO SE TEHDÄ TÄMÄN?! *PiuPiuPiiras kaataa tuolinsa täysin vaakatasoon lattialle ja jää makaamaan siihen.*",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        lattia: {
+          text: "LATTIAJENGI AUH! LATTIAJENGI AUH! *PiuPiuPiiras ojentaa sinulle eeppisen veljesnyrkin (Brofist), Hei!*",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        }
+      }
+    },
+    gotham: {
+      name: "Gothamin Shakki",
+      avatar: "♟️",
+      nodes: {
+        start: {
+          text: "*Tuijottaa sinua silmät pyöreinä kädet päälaella.* MITÄ SINÄ TEIT?! Siirsitkö sinä juuri sotilaan ruutuun f3?!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "Minä uhraan... KUNINGATTAREN!", next: "kuningatar" },
+            { text: "Syön sinun tornisi suuhuni.", next: "syo" }
+          ]
+        },
+        hei: {
+          text: "Hei, Hei! Nimesi on suurmestari-tason siirto, mutta sinun ELO-lukusi näyttää silti numerolta 160!",
+          choices: [
+            { text: "Kuningas e2 on paras avaus.", next: "bongcloud" },
+            { text: "Mikä on ohestalyönti (En Passant)?", next: "enpassant" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        kuningatar: {
+          text: "*Huutaa kurkku suorana:* HÄN UHRASI KUNINGATTAREN! *Piirtää ilmaan 47 punaista nuolta.* Tämä on neroutta!",
+          choices: [
+            { text: "Se oli vahinko, hiireni lipesi.", next: "vahinko" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        syo: {
+          text: "*Gothamin Shakki lyö otsaansa niin kovaa, että ruutuun ilmestyy jättimäinen punainen kysymysmerkki (??).* Tuo on jäätävä munaus!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        bongcloud: {
+          text: "Bongcloud-avaus?! *Gothamin Shakki kaatuu tuoliltaan ja alkaa itkeä ilosta.* Olet pysäyttämätön, Hei!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        enpassant: {
+          text: "Googlaa ohestalyönti! Se on pakollinen siirto, tai muuten shakkipoliisi tulee hakemaan sinut!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        vahinko: {
+          text: "*Gothamin Shakki huokaisee syvään.* Tietenkin se oli. Miksi edes yritän opettaa teille shakkia...",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        }
+      }
+    },
+	
+	    Jynkky: {
+      name: "Jynkky",
+      avatar: "🎮",
+      nodes: {
+        start: {
+          text: "*Nojaa mikkiin niin lähelle, että ääni särisee.* ME OLLAAN SIIS KUPARISSA?! Kuka sinä olet ja miksi et vahvistanut tuota seinää?!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "Minä ammuin ohi 47 kertaa peräkkäin.", next: "tahtays" },
+            { text: "Tämä peli on täyttä roskaa.", next: "roskaa" }
+          ]
+        },
+        hei: {
+          text: "HEI?! *Menee täysin hiljaiseksi ja tuijottaa kameraan ilmeettömänä viisi sekuntia.* Okei, sinun nimesi on Kupari 5, Hei.",
+          choices: [
+            { text: "Olen itse asiassa Valkoinen Vanilja.", next: "vanilja" },
+            { text: "Katso minun täydellistä peliliikettäni!", next: "tahtays" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        tahtays: {
+          text: "*PURAISI HUULTAAN JA NOUSEE SEISOMAAN.* HYVÄ TÄHTÄYS! *Alkaa hakata pöytää.* TÄMÄ KAVERI EI OSUISI EDES LADON SEINÄÄN SISÄPUOLELTA!",
+          choices: [
+            { text: "Minulla oli lagia.", next: "lagi" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        roskaa: {
+          text: "ROSKAA! TÄYTTÄ ROSKAA! *Heittää kuulokkeet lattialle ja pyyhkii otsaa hikipyyhkeellä.* Poista tämä peli!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        vanilja: {
+          text: "*Jynkky nostaa kulmakarvojaan.* Vanilja?! Selvä, mennään sitten. Älä vain kuole ensimmäisen kymmenen sekunnin aikana, Hei!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        lagi: {
+          text: "LAGIA?! Sinulla on 9 pingiä! Älä selitä, Hei! *Tuijottaa kameraan suu auki.*",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        }
+      }
+    },
+	
+	    pengviini: {
+      name: "Pengviini Nolla",
+      avatar: "🐧",
+      nodes: {
+        start: {
+          text: "*Seisoo täysin ilmeettömänä valkoisessa t-paidassa ja puhuu matalalla, tasaisella äänellä.* Minun nimeni on Pengviini Nolla. Kuka sinä olet ja miksi näytät siltä kuin olisit juuri taistellut pesukarhun kanssa roskiksesta?",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "WOO! JOO BEIBI! Tätä minä olen odottanut!", next: "woo" },
+            { text: "Miksi sinulla on aina tuo sama valkoinen paita?", next: "paita" }
+          ]
+        },
+        hei: {
+          text: "*Nyökkää hitaasti ilman yhtäkään ilmettä kasvoillaan.* Terve Hei. Tuo nimi on kosteampi kuin mutainen liukumäki heinäkuussa.",
+          choices: [
+            { text: "Mitä Kosteusmittari näyttää tälle kylälle?", next: "mittari" },
+            { text: "Minulla on taskussa muovinen lelu.", next: "lelu" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        woo: {
+          text: "*Pengviini Nolla nostaa kätensä ilmaan, huutaa täysin tasapaksusti 'WOO, JOO BEIBI' ja palaa välittömästi kivikasvoksi.* Tämä on suurin saavutukseni.",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        paita: {
+          text: "Minulla on kaapissa neljäsataa identtistä valkoista t-paitaa. Muoti on kuollut, ja minä olen sen haudankaivaja.",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        mittari: {
+          text: "Annan tälle kylälle kosteusmittarilla 15 prosenttia. Tämä paikka on kuivempi kuin mummon näkkileipä Saharan autiomaassa.",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        lelu: {
+          text: "*Pengviini Nolla tuijottaa muovilelua vakavana kuin se olisi pyhä muinaisjäänne.* Tuo on historian suurin taideteos, Hei.",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        }
+      }
+    },
+	
+	    louis: {
+      name: "LauriOhoo",
+      avatar: "🧼",
+      nodes: {
+        start: {
+          text: "*Tuijottaa sinua järkyttyneenä kädet poskilla ja räpäyttää silmiään hitaasti.* TÄMÄ EI OLE JAKKI T. FILMIT! Kuka sinä olet ja miksi keität kiviä pannulla?! Et kai ole Kakki Felmit?!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "Minulla on mukana säkillinen amerikkalaisia karkkeja.", next: "karkit" },
+            { text: "Olen tullut siivoamaan sinun huoneesi.", next: "siivous" }
+          ]
+        },
+        hei: {
+          text: "Hei?! Eli et ole Kakki Felmit?! *LauriOhoo jäätyy täysin paikoilleen dramaattisen musiikin soidessa taustalla.* En saa nauraa tai räjäytän itseni!",
+          choices: [
+            { text: "*Tekee täysin ilmeettömän kyykkyhypyn*", next: "nauru" },
+            { text: "Tiedätkö missä Taavi Vihreätausta on?", next: "tyler" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        karkit: {
+          text: "AMERIKKALAISIA KARKKEJA?! *Maistaa yhtä ja irvistää kuin olisi syönyt sitruunan.* Tämä maistuu puhtaalta sähkökemikaalilta ja siniseltä väriltä!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        siivous: {
+          text: "MINUN HUONEENI ON TÄYSIN PUHDAS! *Piilottaa nopeasti viisi tyhjää limsatölkkiä sängyn alle.*",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        nauru: {
+          text: "*LauriOhoo pidättelee hengitystään posket pullollaan, kunnes purskahtaa nauruun.* Hävisin pelin, Hei!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        tyler: {
+          text: "Taavi on varmaan taas nukkumassa neljän tunnin päiväunia koulun jälkeen tai testaamassa taikavaahtoa kananmuniin!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        }
+      }
+    },
+
+    tyler: {
+      name: "Taavi Vihreätausta",
+      avatar: "🌯",
+      nodes: {
+        start: {
+          text: "*Seisoo vihreän taustakankaan edessä ja puhuu niin nopeasti, että sanat törmäävät toisiinsa.* VELI! Arvaa mitä minulle juuri tapahtui matkalla tänne?! Kuka sinä edes olet?!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "Miksi sinun kädessäsi on taikavaahtoa?", next: "vaahto" },
+            { text: "Olen sinun koulusi matematiikan opettaja.", next: "ope" }
+          ]
+        },
+        hei: {
+          text: "HEI?! *Tuijottaa kameraan kulmat kurtussa.* Tuo on kaikista samaistuttavin nimi minkä olen ikinä kuullut! En mene enää ikinä ulos!",
+          choices: [
+            { text: "Käytätkö sinä ikinä Pythagoraan lausetta?", next: "matikka" },
+            { text: "LauriOhoo sanoi että nukut liikaa.", next: "paivaunet" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        vaahto: {
+          text: "TÄMÄ ON PUHDISTUSVAAHTOA! *Suihkuttaa sitä suoraan päälle asetetun kananmunan ja limsatölkin päälle.* Katso miten se kuplii!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        ope: {
+          text: "EN TULE KOULUUN PERJANTAINA! *Juoksee ympyrää ja huutaa:* En ole koskaan tarvinnut algebraa ostaessani burritoa!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        matikka: {
+          text: "EN IKINÄ! Mutta osaan laskea täsmälleen montako sekuntia minulla on aikaa ennen kuin äiti huomaa sotkun, Hei!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        paivaunet: {
+          text: "NE OVAT PARHAITA UNIA! Heräät niin syvästä unesta, että käsivarressasi on tyynyn kuvioita etkä tiedä mikä vuosi nyt on!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        }
+      }
+    },
+
+    Hxssu: {
+      name: "Hxssu",
+      avatar: "😐",
+      nodes: {
+        start: {
+          text: "*Tuijottaa sinua täysin ilmeettömänä samalla kun taustalla soi dramaattinen pianomusiikki.* Yritä olla hymyilemättä. Kuka sinä olet ja miksi näytät meemiltä, jolla on synkkä taustatarina?",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "*Hidastettu video hamsterista joka törmää lasiin*", next: "hamsteri" },
+            { text: "Miksi sinulla on näin vakava ilme?", next: "ilme" }
+          ]
+        },
+        hei: {
+          text: "*Suupieli nykäisee millin ylöspäin, mutta ilme palautuu välittömästi kivikovaksi.* En hymyillyt, Hei. Minulla oli vain roska silmässä.",
+          choices: [
+            { text: "Kommenttikenttä laski että hymyilit kolme kertaa.", next: "kommentit" },
+            { text: "Olen syönyt pelkkää korealaista lähikaupparuokaa 24 tuntia.", next: "ruoka" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        hamsteri: {
+          text: "*Hxssu katsoo hamsterivideota ja räjähtää nauruun.* OKEI TUO EI LASKETA! Aloitetaan haaste alusta!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        ilme: {
+          text: "Tämä on ammattilaisen pokkanaama. Se on hiottu tuhansien cringe-videoiden ja myötähäpeähaasteiden tulessa.",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        kommentit: {
+          text: "VALETTA! *Zoomaa kameraan niin lähelle että vain nenä näkyy.* Kommenttikenttä valehtelee aina, Hei!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        ruoka: {
+          text: "LEGENDAA! Se on ainoa oikea tapa selviytyä tässä kylässä. Pidä lippu korkealla, Hei.",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        }
+      }
+    },
+
+    kissa: {
+      name: "MinäNäytänNopeus",
+      avatar: "⚡",
+      nodes: {
+        start: {
+          text: "WOO! SEWEY! MinäNäytänNopeus täällä! Kuka uskaltaa haastaa minut juoksukisaan juuri nyt?!",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "*Haukkuu kuin vihainen chihuahua*", next: "haukku" },
+            { text: "Cristiano Ronaldo on parempi kuin Messi.", next: "ronaldo" }
+          ]
+        },
+        hei: {
+          text: "MITÄ?! HEI?! Sinun nimesi on HEI?! Se on nopein nimi minkä olen ikinä kuullut! LET'S GO!",
+          choices: [
+            { text: "Olen yhtä nopea kuin etana liisterissä.", next: "etana" },
+            { text: "Tee takaperinvoltti!", next: "voltti" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        haukku: {
+          text: "WUF WUF GRRR! *MinäNäytänNopeus alkaa haukkua takaisin vielä kovempaa ja tärisee innostuksesta!*",
+          choices: [
+            { text: "Minun nimeni on Hei.", next: "hei" },
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        ronaldo: {
+          text: "SUIIIIIII! Olet täysin oikeassa! Sinä olet nyt virallisesti paras ystäväni, Hei!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        etana: {
+          text: "Ei haittaa! Asenne ratkaisee! Tärkeintä on huutaa kovaa samalla kun juoksee!",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        },
+        voltti: {
+          text: "*MinäNäytänNopeus tekee takaperinvoltin, kaataa vahingossa kameran ja huutaa 'CHAT, NÄITTEKÖ TUON?!'*",
+          choices: [
+            { text: "[Aloita keskustelu alusta]", next: "start" }
+          ]
+        }
+      }
+    }
+  };
+
+  let currentNPC = 'ritari';
+
+  function selectNPC(npcKey, btnElement) {
+    currentNPC = npcKey;
+    document.querySelectorAll('.npc-btn').forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+    renderNode('start');
+  }
+
+  function renderNode(nodeKey) {
+    const npc = npcs[currentNPC];
+    const node = npc.nodes[nodeKey];
+
+    document.getElementById('npc-avatar').textContent = npc.avatar;
+    document.getElementById('npc-name').textContent = npc.name;
+    document.getElementById('npc-text').textContent = node.text;
+
+    const choicesDiv = document.getElementById('choices');
+    choicesDiv.innerHTML = '';
+
+    node.choices.forEach(choice => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = "> " + choice.text;
+      btn.onclick = () => renderNode(choice.next);
+      choicesDiv.appendChild(btn);
+    });
+  }
+
+  // Käynnistetään peli
+  renderNode('start');
+</script>
+
+</body>
+</html>

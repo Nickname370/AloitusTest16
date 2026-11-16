@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pinnan Alla 2</title>
+
+
+<style>
+    body{
+        margin:0;
+        overflow:hidden;
+        background:black;
+        font-family:Arial,sans-serif;
+    }
+
+
+    canvas{
+        display:block;
+    }
+
+
+    #hud{
+        position:absolute;
+        top:10px;
+        left:10px;
+        color:white;
+        z-index:10;
+        background:rgba(0,0,0,0.5);
+        padding:10px;
+        border-radius:10px;
+    }
+
+
+    #inventory{
+        display:none;
+        position:absolute;
+        bottom:10px;
+        left:10px;
+        color:white;
+        background:rgba(0,0,0,0.6);
+        padding:10px;
+        border-radius:10px;
+        width:220px;
+    }
+
+
+    #crafting{
+        display:none;
+        position:absolute;
+        right:0px;
+        bottom:2px;
+        color:white;
+        background:rgba(0,0,0,0.6);
+        padding:2px;
+        border-radius:10px;
+        width:300px;
+    }
+
+
+    #crosshair{
+        position:absolute;
+        left:50%;
+        top:50%;
+        transform:translate(-50%,-50%);
+        color:white;
+        font-size:40px;
+        z-index:20;
+        pointer-events:none;
+    }
+
+
+    button{
+        width:100%;
+        margin-top:5px;
+        padding:8px;
+        border:none;
+        border-radius:5px;
+        background:#00aaff;
+        color:white;
+        cursor:pointer;
+    }
+
+
+    button:hover{
+        background:#0088cc;
+    }
+	
+	#info{
+        display:none;
+        position:absolute;
+        top:2px;
+        right:0px;
+        color:white;
+        background:rgba(0,0,0,0.6);
+        padding:2px;
+        border-radius:10px;
+        width:300px;
+    }
+	
+	#valikko{
+		transition: all 0.3s ease;
+		position:absolute;
+		top:550px; 
+		right:520px;
+		padding:10px 14px; 
+		font-size:16px;
+		cursor:pointer;
+	}
+</style>
+</head>
+
+
+<body>
+
+
+<div id="crosshair">×</div>
+
+
+<div id="hud">
+	<div>Inventaario / Näppäimet = E</div><div id="podStatus">🔧 Etsi aloituspodi</div>
+	<p>Klikka = lukitse hiiri</p>
+    <div>❤️ HP: <span id="health">100</span></div>
+    <div>🫁 Happi: <span id="oxygen">1</span></div>
+    <div>🍗 Nälkä: <span id="hunger">100</span></div>
+    <div>📍 Syvyys: <span id="depth">0</span>m</div>
+</div>
+
+
+<div id="inventory">
+    <h3>🎒 Inventaario</h3>
+    <div id="items"></div>
+</div>
+
+
+<div id="info">
+  <a href="valikko3.html">
+    <button style="position:absolute; top:-5px; right:0px; padding:10px 14px; font-size:16px; cursor:pointer;">⬅️ Pelivalikkoon</button>
+  </a>
+	\
+
+    <h3>INFO</h3>
+	<h5>Muista katsoa happeasi!</h5> 
+	<h5>Syö pikkukaloja!</h5>
+	<h5>Tee happisäiliö jotta voit hengittää kauemmin!</h5>
+	<h5>Tee raketti jotta voit paeta!</h5>
+	<p>Liiku = WASD</p> 
+	<p>Inventaario = E</p> 
+	<p>Ylös = Välilyönti</p> 
+	<p>Alas = Vasen Shift (↑)</p>
+	<p>Klikka = lukitse hiiri</p>
+	<p>ESC = vapauta hiiri</p>
+</div>
+
+
+<div id="crafting">
+    <h3>🔧 Craftaus</h3><p>Craftaa vain podin lähellä.</p>
+
+    <button onclick="craftTank()">
+        Rakenna Happi Säiliö (3 Titaania ja 2 Kuparia)
+    </button>
+
+
+    <button onclick="craftRocket()">
+        🚀 Rakenna Raketti
+        (15 Titaania + 5 Kristallia + 10 Kuparia)
+    </button>
+</div>
+
+
+<div id="gameOverScreen" style="
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.9);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    z-index:999;
+    color:white;
+    font-family:Arial;
+">
+    <h1 style="font-size:64px; margin-bottom:20px;">
+        GAME OVER
+    </h1>
+
+
+    <button id="restartBtn" style="
+		position: absolute;
+		bottom: 100;
+		right: 500;
+        width:220px;
+        padding:15px;
+        font-size:24px;
+        background:#00aaff;
+        border:none;
+        border-radius:10px;
+        cursor:pointer;
+    ">
+        🔄 Uudestaan
+    </button>
+	  <a href="valikko3.html">
+    <button class="valikko">⬅️ Takaisin Pelivalikkoon</button>
+  </a>
+</div>
+
+
+<div id="winScreen" style="
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.9);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    z-index:999;
+    color:white;
+    font-family:Arial;
+">
+
+
+    <h1 style="font-size:70px;">
+        🚀 VOITIT PELIN
+    </h1>
+    <button onclick="location.reload()" style="
+        width:220px;
+        padding:15px;
+        font-size:24px;
+        background:#00cc66;
+        border:none;
+        border-radius:10px;
+        cursor:pointer;
+    ">
+        🔄 Pelaa Uudestaan
+    </button>
+		  <a href="valikko3.html">
+    <button class="valikko">⬅️ Takaisin Pelivalikkoon</button>
+  </a>
+
+
+</div>
+
+
+<div id="rocketText" style="
+    position:absolute;
+    top:55%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    color:white;
+    font-size:28px;
+    display:none;
+    z-index:1000;
+    text-shadow:2px 2px 8px black;
+">
+    🚀 Klikkaa poistuaksesi planeetalta
+</div>
+
+
+<script type="module">
+
+
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js';
+
+
+document.getElementById("inventory").style.display = "none";
+document.getElementById("crafting").style.display = "none";
+document.getElementById("info").style.display = "none";
+
+
+let inventoryOpen = false;
+//////////////////////////////////////////////////////
+// SCENE
+//////////////////////////////////////////////////////
+
+
+const scene = new THREE.Scene();
+
+
+scene.fog = new THREE.Fog(
+    0x001e3c,
+    20,
+    500
+);
+
+
+//////////////////////////////////////////////////////
+// CAMERA
+//////////////////////////////////////////////////////
+
+
+const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth/window.innerHeight,
+    0.1,
+    5000
+);
+
+
+//////////////////////////////////////////////////////
+// RENDERER
+//////////////////////////////////////////////////////
+
+
+const renderer = new THREE.WebGLRenderer({
+    antialias:true
+});
+
+
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
+
+renderer.shadowMap.enabled = true;
+
+
+document.body.appendChild(renderer.domElement);
+
+
+//////////////////////////////////////////////////////
+// LIGHTS
+//////////////////////////////////////////////////////
+
+
+const ambient = new THREE.AmbientLight(
+    0x66ccff,
+    0.7
+);
+
+
+scene.add(ambient);
+
+
+const sun = new THREE.DirectionalLight(
+    0xffffff,
+    2
+);
+
+
+sun.position.set(100,200,100);
+
+
+scene.add(sun);
+
+
+//////////////////////////////////////////////////////
+// WATER SURFACE
+//////////////////////////////////////////////////////
+
+
+const waterSurface = new THREE.Mesh(
+    new THREE.PlaneGeometry(5000,5000),
+    new THREE.MeshStandardMaterial({
+        color:0x3399ff,
+        transparent:true,
+        opacity:0.7,
+        side:THREE.DoubleSide
+    })
+);
+
+
+waterSurface.rotation.x = -Math.PI/2;
+
+
+scene.add(waterSurface);
+
+
+//////////////////////////////////////////////////////
+// SKY
+//////////////////////////////////////////////////////
+
+
+const sky = new THREE.Mesh(
+    new THREE.SphereGeometry(3000,32,32),
+    new THREE.MeshBasicMaterial({
+        color:0x87ceeb,
+        side:THREE.BackSide
+    })
+);
+
+
+scene.add(sky);
+
+
+//////////////////////////////////////////////////////
+// PLAYER
+//////////////////////////////////////////////////////
+
+
+const player = new THREE.Object3D();
+
+
+player.position.set(-140, 1, -140);
+
+
+scene.add(player);
+
+//////////////////////////////////////////////////////
+// START POD + CRAFTING RANGE
+//////////////////////////////////////////////////////
+
+const startPod = new THREE.Group();
+startPod.position.set(-140, 0, -140);
+
+const podBase = new THREE.Mesh(
+    new THREE.CylinderGeometry(12, 14, 2, 32),
+    new THREE.MeshStandardMaterial({color:0x526b78, metalness:0.65, roughness:0.35})
+);
+podBase.position.y = -1;
+startPod.add(podBase);
+
+const podDome = new THREE.Mesh(
+    new THREE.SphereGeometry(10, 32, 20, 0, Math.PI * 2, 0, Math.PI / 2),
+    new THREE.MeshStandardMaterial({color:0x55ccee, transparent:true, opacity:0.32, metalness:0.25, roughness:0.15})
+);
+podDome.position.y = 0;
+startPod.add(podDome);
+
+const podRing = new THREE.Mesh(
+    new THREE.TorusGeometry(10, 0.55, 8, 48),
+    new THREE.MeshStandardMaterial({color:0x9eeeff, emissive:0x176080, metalness:0.7})
+);
+podRing.rotation.x = Math.PI / 2;
+podRing.position.y = 0.2;
+startPod.add(podRing);
+
+const podLight = new THREE.PointLight(0x55ccff, 1.8, 35);
+podLight.position.set(0, 7, 0);
+startPod.add(podLight);
+scene.add(startPod);
+
+function nearPod(){
+    const dx = player.position.x - startPod.position.x;
+    const dz = player.position.z - startPod.position.z;
+    return Math.sqrt(dx * dx + dz * dz) <= 25;
+}
+
+
+//////////////////////////////////////////////////////
+// FLOOR
+//////////////////////////////////////////////////////
+
+
+const floorLevel = -30;
+
+
+const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(5000,5000),
+    new THREE.MeshStandardMaterial({
+        color:0x223322
+    })
+);
+
+
+floor.rotation.x = -Math.PI/2;
+floor.position.y = floorLevel;
+
+
+scene.add(floor);
+
+
+//////////////////////////////////////////////////////
+// BIOMES
+//////////////////////////////////////////////////////
+
+
+function createBiome(x,z,color,height,count){
+
+
+    for(let i=0;i<count;i++){
+
+
+        const coral = new THREE.Mesh(
+
+
+            new THREE.CylinderGeometry(
+                0.2,
+                1,
+                Math.random()*height+2,
+                6
+            ),
+
+
+            new THREE.MeshStandardMaterial({
+                color
+            })
+        );
+
+
+        coral.position.set(
+            x + (Math.random()-0.5)*100,
+            floorLevel,
+            z + (Math.random()-0.5)*100
+        );
+
+
+        scene.add(coral);
+    }
+}
+
+
+createBiome(0,0,0xff00ff,10,80);
+createBiome(200,0,0x00ffcc,20,120);
+createBiome(-200,-100,0xff3300,8,100);
+createBiome(200,-100,0x8ef00e,30,150);
+createBiome(-200,100,0x0de0c1,40,130);
+createBiome(200,100,0x9c11ed,60,160);
+
+
+//////////////////////////////////////////////////////
+// WRECK – KOLME ERILLISTÄ ROMUPALAA
+//////////////////////////////////////////////////////
+const wreckPieces = [];
+const wreckCoreBoxes = [];
+function createWreckPiece(x, z, rotation, scale=1, kind=0){
+    const group = new THREE.Group();
+    const metal = new THREE.MeshStandardMaterial({color:kind===1?0x596b78:0x666666, metalness:0.9, roughness:0.55});
+    const core = new THREE.Mesh(new THREE.CylinderGeometry(18*scale, 25*scale, 105*scale, 16), metal);
+    core.rotation.z = Math.PI/2;
+    group.add(core);
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(19*scale, 42*scale, 16), metal);
+    nose.rotation.z = -Math.PI/2;
+    nose.position.x = 72*scale;
+    group.add(nose);
+    for(let i=0;i<3;i++){
+        const engine = new THREE.Mesh(new THREE.CylinderGeometry(5*scale,7*scale,25*scale,10), new THREE.MeshStandardMaterial({color:0x303b45, metalness:1}));
+        engine.rotation.z=Math.PI/2;
+        engine.position.set(-62*scale, (i-1)*11*scale, (i%2?1:-1)*12*scale);
+        group.add(engine);
+    }
+    for(let i=0;i<18;i++){
+        const debris = new THREE.Mesh(new THREE.BoxGeometry(3+Math.random()*7,3+Math.random()*7,3+Math.random()*7),metal);
+        debris.position.set((Math.random()-.5)*115*scale,(Math.random()-.5)*25*scale,(Math.random()-.5)*32*scale);
+        debris.rotation.set(Math.random()*3,Math.random()*3,Math.random()*3);
+        group.add(debris);
+    }
+    for(let i=0;i<3;i++){
+        const light=new THREE.PointLight(0xff5a18,2,35*scale);
+        light.position.set((Math.random()-.5)*75*scale,(Math.random()-.5)*20*scale,0);
+        group.add(light);
+    }
+    group.position.set(x, -7, z);
+    group.rotation.y=rotation;
+    group.rotation.z=(Math.random()-.5)*.22;
+    group.scale.setScalar(1);
+    scene.add(group);
+    wreckPieces.push(group);
+    wreckCoreBoxes.push(new THREE.Box3());
+}
+createWreckPiece(-250,-250,0.7,1.0,0);
+createWreckPiece(260,-170,-0.9,0.82,1);
+createWreckPiece(-90,285,1.8,0.9,0);
+function updateWreckCollision(){
+    wreckPieces.forEach((piece,i)=>{
+        wreckCoreBoxes[i].setFromObject(piece).expandByScalar(-8);
+    });
+}
+
+//////////////////////////////////////////////////////
+// RESOURCES
+//////////////////////////////////////////////////////
+
+
+const resources = [];
+const foodBalls = [];
+const smallFish = [];
+const edgeHunters = [];
+
+
+let rocket = null;
+let rocketBuilt = false;
+
+
+function createResource(type,color,x,z){
+
+
+    const mesh = new THREE.Mesh(
+
+
+        new THREE.SphereGeometry(1,8,8),
+
+
+        new THREE.MeshStandardMaterial({
+            color,
+            emissive:color
+        })
+    );
+
+
+    mesh.position.set(x,-27,z);
+
+
+    scene.add(mesh);
+
+
+    resources.push({
+        type,
+        mesh
+    });
+}
+
+
+for(let i=0;i<34;i++){
+    createFoodBall(Math.random()*520-260, Math.random()*520-260);
+}
+
+
+for(let i=0;i<100;i++){
+
+
+    createResource(
+        "Titanium",
+        0xaaaaaa,
+        Math.random()*400-200,
+        Math.random()*400-200
+    );
+
+
+    createResource(
+        "Crystal",
+        0x00ffff,
+        Math.random()*520-260,
+        Math.random()*520-260
+    );
+    if(i<65) createResource("Copper",0xb87333,Math.random()*540-270,Math.random()*540-270);
+}
+
+
+function createFoodBall(x,z){
+    const fish=new THREE.Group();
+    const body=new THREE.Mesh(new THREE.SphereGeometry(1.5,14,12),new THREE.MeshStandardMaterial({color:0xffb52e,emissive:0x663000,roughness:0.45}));
+    body.scale.set(1.65,0.8,0.75); fish.add(body);
+    const tail=new THREE.Mesh(new THREE.ConeGeometry(0.9,2.2,4),new THREE.MeshStandardMaterial({color:0xff6b22}));
+    tail.rotation.x=Math.PI/2; tail.position.z=1.9; fish.add(tail);
+    const eye=new THREE.Mesh(new THREE.SphereGeometry(.16,8,8),new THREE.MeshBasicMaterial({color:0xffffff}));
+    eye.position.set(-.55,.35,-.65); fish.add(eye);
+    fish.position.set(x,-27+Math.random()*1,z);
+    scene.add(fish);
+    foodBalls.push(fish);
+    smallFish.push({mesh:fish,originX:x,originZ:z,phase:Math.random()*Math.PI*2,speed:.0003+Math.random()*.0004});
+}
+
+//////////////////////////////////////////////////////
+// REUNAKALAT – USEITA ERILAISELTA NÄYTTÄVIÄ PARTIOIJOITA
+//////////////////////////////////////////////////////
+function makeEdgeHunter(color,accent,size){
+    const g=new THREE.Group();
+    const body=new THREE.Mesh(new THREE.SphereGeometry(size,18,14),new THREE.MeshStandardMaterial({color,roughness:.38,metalness:.15}));
+    body.scale.set(1.7,.85,1); g.add(body);
+    const head=new THREE.Mesh(new THREE.ConeGeometry(size*.72,size*1.5,5),new THREE.MeshStandardMaterial({color:accent}));
+    head.rotation.x=-Math.PI/2; head.position.z=-size*.95; g.add(head);
+    const finMat=new THREE.MeshStandardMaterial({color:accent,side:THREE.DoubleSide});
+    for(const side of [-1,1]){const fin=new THREE.Mesh(new THREE.ConeGeometry(size*.55,size*1.4,4),finMat);fin.position.set(side*size*.8,0,size*.1);fin.rotation.z=side*.9;g.add(fin);}
+    const eyeMat=new THREE.MeshBasicMaterial({color:0xffee99});
+    for(const side of [-1,1]){const eye=new THREE.Mesh(new THREE.SphereGeometry(size*.13,8,8),eyeMat);eye.position.set(side*size*.45,size*.25,-size*.72);g.add(eye);}
+    scene.add(g); return g;
+}
+const edgeHunterData=[];
+const hunterLooks=[[0x172b55,0x4dd5ff,5],[0x49234f,0xff65c8,6],[0x263c30,0xb5e85c,4.5],[0x50351d,0xffa33b,5.5],[0x20202b,0xaaaaff,6]];
+for(let i=0;i<7;i++){
+    const look=hunterLooks[i%hunterLooks.length];
+    const mesh=makeEdgeHunter(...look);
+    const angle=i/7*Math.PI*2;
+    edgeHunterData.push({
+    mesh,
+    angle,
+    radius: 545+(i%3)*18,
+    speed: .00004+(i%3)*.000012,
+    phase: i*1.7,
+    attackRange: 100,
+    attackSpeed: 0.12,
+    damage: 10,
+    hitCooldown: 0
+});
+}
+
+//////////////////////////////////////////////////////
+// INVENTORY
+//////////////////////////////////////////////////////
+
+
+const inventory = {
+    Titanium:0,
+    Crystal:0,
+    Copper:0
+};
+
+
+function updateInventory(){
+    document.getElementById("items").innerHTML = `
+        Titaani: ${inventory.Titanium}<br>
+        Kristalli: ${inventory.Crystal}<br>
+        Kupari: ${inventory.Copper}
+    `;
+}
+
+//////////////////////////////////////////////////////
+// PLAYER STATS
+//////////////////////////////////////////////////////
+
+
+let health = 100;
+let oxygen = 5;
+let oxygenMax = 30;
+let hunger = 100;
+
+
+//////////////////////////////////////////////////////
+// CRAFTING
+//////////////////////////////////////////////////////
+
+
+function craftTank(){
+    if(!nearPod()){
+        alert("Voit craftata vain aloituspodin sisällä!");
+        return;
+    }
+
+    if(
+        inventory.Titanium >= 3 &&
+        inventory.Copper >= 2
+    ){
+        inventory.Titanium -= 3;
+        inventory.Copper -= 2;
+
+        // Kasvatetaan maksimihappea
+        oxygenMax += 35;
+
+        // Täytetään happi uudelle maksimimäärälle
+        oxygen = oxygenMax;
+
+        updateInventory();
+    }
+}
+
+window.craftTank = craftTank;
+
+function craftRocket(){
+    if(!nearPod()){ alert("Voit craftata vain aloituspodin sisällä!"); return; }
+    if(rocketBuilt) return;
+
+
+    if(
+        inventory.Titanium >= 15 &&
+        inventory.Crystal >= 5 &&
+        inventory.Copper >= 10
+    ){
+
+
+        inventory.Titanium -= 15;
+        inventory.Crystal -= 5;
+        inventory.Copper -= 10;
+
+
+        updateInventory();
+
+
+        rocketBuilt = true;
+
+
+        rocket = new THREE.Group();
+
+
+        const body = new THREE.Mesh(
+
+
+            new THREE.CylinderGeometry(
+                2,
+                2,
+                12,
+                16
+            ),
+
+
+            new THREE.MeshStandardMaterial({
+                color:0xffffff
+            })
+        );
+
+
+        body.position.y = 6;
+
+
+        rocket.add(body);
+
+
+        const nose = new THREE.Mesh(
+
+
+            new THREE.ConeGeometry(
+                2,
+                4,
+                16
+            ),
+
+
+            new THREE.MeshStandardMaterial({
+                color:0xff3333
+            })
+        );
+
+
+        nose.position.y = 14;
+
+
+        rocket.add(nose);
+
+
+        rocket.position.set(
+            player.position.x,
+            2,
+            player.position.z
+        );
+
+
+        scene.add(rocket);
+    }
+}
+
+
+window.craftRocket = craftRocket;
+
+
+//////////////////////////////////////////////////////
+// INPUT
+//////////////////////////////////////////////////////
+
+
+addEventListener("keydown",(e)=>{
+
+
+    if(e.key.toLowerCase() === "e"){
+
+
+        inventoryOpen = !inventoryOpen;
+
+
+        document.getElementById("inventory").style.display =
+            inventoryOpen ? "block" : "none";
+
+
+        document.getElementById("crafting").style.display =
+            inventoryOpen && nearPod() ? "block" : "none";
+			
+		document.getElementById("info").style.display =
+            inventoryOpen ? "block" : "none";
+    }
+	document.addEventListener(
+    "click",
+    ()=>{
+
+
+        if(!rocketBuilt || !rocket)
+            return;
+
+
+        const dist =
+            player.position.distanceTo(
+                rocket.position
+            );
+
+
+        if(dist > 15)
+            return;
+
+
+        const direction =
+            new THREE.Vector3();
+
+
+        camera.getWorldDirection(direction);
+
+
+        const rocketDir =
+            rocket.position.clone()
+            .sub(camera.position)
+            .normalize();
+
+
+        const dot =
+            direction.dot(rocketDir);
+
+
+        if(dot > 0.98){
+
+
+            document.exitPointerLock();
+
+
+            document.getElementById(
+                "winScreen"
+            ).style.display = "flex";
+        }
+    }
+);
+});
+
+
+const keys = {};
+
+
+document.addEventListener(
+    "keydown",
+    e=>{
+        keys[e.key.toLowerCase()] = true;
+    }
+);
+
+
+document.addEventListener(
+    "keyup",
+    e=>{
+        keys[e.key.toLowerCase()] = false;
+    }
+);
+
+
+//////////////////////////////////////////////////////
+// FPS CAMERA
+//////////////////////////////////////////////////////
+
+
+let yaw = 0;
+let pitch = 0;
+
+
+document.addEventListener(
+    "mousemove",
+    (e)=>{
+
+
+        if(document.pointerLockElement){
+
+
+            yaw -= e.movementX * 0.002;
+            pitch -= e.movementY * 0.002;
+
+
+            pitch = Math.max(
+                -Math.PI/2,
+                Math.min(Math.PI/2,pitch)
+            );
+        }
+    }
+);
+
+
+document.body.addEventListener(
+    "click",
+    ()=>{
+        document.body.requestPointerLock();
+    }
+);
+
+
+//////////////////////////////////////////////////////
+// MOVEMENT
+//////////////////////////////////////////////////////
+
+
+const moveSpeed = 0.50;
+
+
+function movePlayer(){
+
+
+    const previousPosition =
+        player.position.clone();
+
+
+    const forward = new THREE.Vector3(
+        Math.sin(yaw),
+        0,
+        Math.cos(yaw)
+    );
+
+
+    const right = new THREE.Vector3(
+        Math.cos(yaw),
+        0,
+        -Math.sin(yaw)
+    );
+
+
+    if(keys["w"])
+        player.position.add(
+            forward.clone()
+            .multiplyScalar(-moveSpeed)
+        );
+
+
+    if(keys["s"])
+        player.position.add(
+            forward.clone()
+            .multiplyScalar(moveSpeed)
+        );
+
+
+    if(keys["a"])
+        player.position.add(
+            right.clone()
+            .multiplyScalar(-moveSpeed)
+        );
+
+
+    if(keys["d"])
+        player.position.add(
+            right.clone()
+            .multiplyScalar(moveSpeed)
+        );
+
+
+    if(keys[" "])
+        player.position.y += moveSpeed;
+
+
+    if(keys["shift"])
+        player.position.y -= moveSpeed;
+
+
+    //////////////////////////////////////////
+    // WATER SURFACE LIMIT
+    //////////////////////////////////////////
+
+
+    if(player.position.y > 0){
+
+
+        player.position.y = 0;
+    }
+
+
+    //////////////////////////////////////////
+    // FLOOR COLLISION
+    //////////////////////////////////////////
+
+
+    if(player.position.y < floorLevel){
+    player.position.y = floorLevel;
+}
+
+
+    // Kartan rajat: estää eksymisen liian kauas podista
+    player.position.x=THREE.MathUtils.clamp(player.position.x,-590,590);
+    player.position.z=THREE.MathUtils.clamp(player.position.z,-590,590);
+
+    //////////////////////////////////////////
+    // WRECK COLLISION
+    //////////////////////////////////////////
+
+
+    updateWreckCollision();
+
+
+    const playerBox = new THREE.Box3(
+
+
+        new THREE.Vector3(
+            player.position.x - 0.5,
+            player.position.y - 1,
+            player.position.z - 0.5
+        ),
+
+
+        new THREE.Vector3(
+            player.position.x + 0.5,
+            player.position.y + 1,
+            player.position.z + 0.5
+        )
+    );
+
+
+    if(wreckCoreBoxes.some(box=>playerBox.intersectsBox(box))){
+
+
+        player.position.copy(
+            previousPosition
+        );
+    }
+}
+
+//////////////////////////////////////////////////////
+// GAME LOOP
+//////////////////////////////////////////////////////
+
+
+function animate(){
+if(inventoryOpen){
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+    return;
+}
+
+
+    requestAnimationFrame(animate);
+
+
+    movePlayer();
+    const atPod=nearPod();
+    document.getElementById("podStatus").textContent=atPod?"🔧 Olet aloituspodissa – craftaus käytössä":"🔧 Craftaus onnistuu vain aloituspodissa";
+    if(inventoryOpen) document.getElementById("crafting").style.display=atPod?"block":"none";
+
+    //////////////////////////////////////////
+    // WATER WAVES
+    //////////////////////////////////////////
+
+
+    waterSurface.position.y =
+        Math.sin(Date.now()*0.001)*0.3;
+
+
+    //////////////////////////////////////////
+    // CAMERA
+    //////////////////////////////////////////
+
+
+    camera.position.copy(
+        player.position.clone().add(
+            new THREE.Vector3(0,2,0)
+        )
+    );
+
+
+    camera.rotation.order = "YXZ";
+
+
+    camera.rotation.y = yaw;
+    camera.rotation.x = pitch;
+	
+	    //////////////////////////////////////////
+    // ROCKET LOOK DETECTION
+    //////////////////////////////////////////
+
+
+    let lookingAtRocket = false;
+
+
+    if(rocketBuilt && rocket){
+
+
+        rocket.position.y =
+            2 + Math.sin(Date.now()*0.002)*0.3;
+
+
+        const dist =
+            player.position.distanceTo(
+                rocket.position
+            );
+
+
+        if(dist < 15){
+
+
+            const direction =
+                new THREE.Vector3();
+
+
+            camera.getWorldDirection(direction);
+
+
+            const rocketDir =
+                rocket.position.clone()
+                .sub(camera.position)
+                .normalize();
+
+
+            const dot =
+                direction.dot(rocketDir);
+
+
+            if(dot > 0.98){
+
+
+                lookingAtRocket = true;
+            }
+        }
+    }
+
+
+    document.getElementById(
+        "rocketText"
+    ).style.display =
+        lookingAtRocket
+        ? "block"
+        : "none";
+
+
+    //////////////////////////////////////////
+    // RESOURCE COLLECTION
+    //////////////////////////////////////////
+
+
+    resources.forEach((r,index)=>{
+
+
+        if(
+            player.position.distanceTo(
+                r.mesh.position
+            ) < 3
+        ){
+
+
+            inventory[r.type]++;
+
+
+            scene.remove(r.mesh);
+
+
+            resources.splice(index,1);
+
+
+            updateInventory();
+        }
+    });
+	
+	    //////////////////////////////////////////
+    // FOOD BALL COLLECTION
+    //////////////////////////////////////////
+
+
+    foodBalls.forEach((food,index)=>{
+
+
+        if(
+            player.position.distanceTo(
+                food.position
+            ) < 3
+        ){
+
+
+            hunger += 20;
+
+
+            hunger = Math.min(
+                hunger,
+                100
+            );
+
+
+            scene.remove(food);
+
+
+            foodBalls.splice(index,1);
+        }
+    });
+
+
+    //////////////////////////////////////////
+    // RUOKAKALAT JA REUNOJEN ISOT KALAT
+    //////////////////////////////////////////
+    const time=Date.now();
+    smallFish.forEach(fish=>{
+        const a=time*fish.speed+fish.phase;
+        fish.mesh.position.x=fish.originX+Math.cos(a)*13;
+        fish.mesh.position.z=fish.originZ+Math.sin(a)*13;
+        fish.mesh.position.y=-13+Math.sin(a*1.7)*1.4;
+        fish.mesh.rotation.y=Math.atan2(Math.cos(a),-Math.sin(a));
+    });
+// Isot reunakalat partioivat ja hyökkäävät pelaajan lähelle tullessaan.
+edgeHunterData.forEach((hunter,i)=>{
+    const dx = player.position.x - hunter.mesh.position.x;
+    const dz = player.position.z - hunter.mesh.position.z;
+    const distance = Math.sqrt(dx*dx + dz*dz);
+
+    if(distance < hunter.attackRange){
+        // Kala syöksyy kohti pelaajaa, mutta pysyy kartan reunalla.
+        const targetAngle = Math.atan2(player.position.z, player.position.x);
+        hunter.angle += Math.atan2(
+            Math.sin(targetAngle-hunter.angle),
+            Math.cos(targetAngle-hunter.angle)
+        ) * 0.025;
+
+        if(distance < 14 && hunter.hitCooldown <= 0){
+            health -= hunter.damage;
+            hunter.hitCooldown = 6;
+        }
+    } else {
+        hunter.angle += hunter.speed * 16;
+    }
+
+    if(hunter.hitCooldown > 0) hunter.hitCooldown--;
+
+    const a = hunter.angle;
+    hunter.mesh.position.set(
+        Math.cos(a)*hunter.radius,
+        -5+Math.sin(time*.0015+hunter.phase)*2,
+        Math.sin(a)*hunter.radius
+    );
+
+    hunter.mesh.lookAt(
+        -Math.sin(a)*hunter.radius,
+        hunter.mesh.position.y,
+        Math.cos(a)*hunter.radius
+    );
+
+    hunter.mesh.rotation.z = Math.sin(time*.002+i)*.06;
+});
+	
+	
+	
+
+    //////////////////////////////////////////
+    // SURVIVAL
+    //////////////////////////////////////////
+
+
+    if(player.position.y < 0){
+
+
+        scene.fog.color.set(
+            0x001e3c
+        );
+
+
+        oxygen -= 0.04;
+
+
+    }else{
+
+
+        scene.fog.color.set(
+            0x87ceeb
+        );
+
+
+        oxygen += 1.4;
+    }
+
+
+    oxygen = Math.min(
+        oxygen,
+        oxygenMax 
+    );
+
+
+    hunger -= 0.006;
+
+
+    if(oxygen <= 0)
+        health -= 1.7;
+
+
+    if(hunger <= 0)
+        health -= 0.2;
+
+
+    //////////////////////////////////////////
+    // HUD
+    //////////////////////////////////////////
+
+
+    document.getElementById(
+        "health"
+    ).innerText =
+        Math.max(0,
+        health.toFixed(0));
+
+
+    document.getElementById(
+        "oxygen"
+    ).innerText =
+        Math.max(0,
+        oxygen.toFixed(0));
+
+
+    document.getElementById(
+        "hunger"
+    ).innerText =
+        Math.max(0,
+        hunger.toFixed(0));
+
+
+    document.getElementById(
+        "depth"
+    ).innerText =
+        Math.abs(
+            player.position.y.toFixed(0)
+        );
+
+
+    //////////////////////////////////////////
+    // GAME OVER
+    //////////////////////////////////////////
+if(health <= 0){
+
+
+    health = 0;
+
+
+    document.exitPointerLock();
+
+
+    document.getElementById(
+        "gameOverScreen"
+    ).style.display = "flex";
+
+
+    renderer.render(scene, camera);
+
+
+    return;
+}
+
+
+    renderer.render(
+        scene,
+        camera
+    );
+}
+
+
+//////////////////////////////////////////////////////
+// RESTART BUTTON
+//////////////////////////////////////////////////////
+
+
+document.getElementById(
+    "restartBtn"
+).addEventListener("click",()=>{
+
+
+    location.reload();
+});
+
+
+animate();
+
+
+//////////////////////////////////////////////////////
+// RESIZE
+//////////////////////////////////////////////////////
+
+
+window.addEventListener(
+    "resize",
+    ()=>{
+
+
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
+
+
+        camera.updateProjectionMatrix();
+
+
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
+    }
+);
+
+
+updateInventory();
+updateWreckCollision();
+
+</script>
+
+
+</body>
+</html>

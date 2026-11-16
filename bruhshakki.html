@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BruhGPT Shakkibotti</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 20px;
+  }
+  h1 {
+    margin-bottom: 5px;
+    color: #f38ba8;
+  }
+  .subtitle {
+    margin-bottom: 20px;
+    font-size: 0.95em;
+    color: #a6adc8;
+  }
+  .game-container {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 1000px;
+  }
+  #board {
+    display: grid;
+    grid-template-columns: repeat(8, 60px);
+    grid-template-rows: repeat(8, 60px);
+    border: 4px solid #313244;
+    border-radius: 4px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  }
+  .square {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 42px;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+  }
+  .light { background-color: #ebecd0; color: #000; }
+  .dark { background-color: #779556; color: #000; }
+  .selected { background-color: #f6f669 !important; }
+  .valid-move::after {
+    content: '';
+    width: 18px;
+    height: 18px;
+    background-color: rgba(0, 0, 0, 0.25);
+    border-radius: 50%;
+    position: absolute;
+  }
+  .valid-capture {
+    box-shadow: inset 0 0 0 4px rgba(235, 64, 52, 0.7);
+  }
+  .last-move {
+    background-color: rgba(245, 246, 130, 0.5) !important;
+  }
+  .sidebar {
+    width: 340px;
+    background-color: #181825;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #313244;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  .status-box {
+    background-color: #313244;
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-align: center;
+    font-size: 1.1em;
+  }
+  .cheat-box {
+    background-color: #45475a;
+    border-left: 4px solid #f38ba8;
+    padding: 12px;
+    border-radius: 4px;
+    min-height: 75px;
+  }
+  .cheat-title {
+    font-weight: bold;
+    color: #f38ba8;
+    margin-bottom: 5px;
+  }
+  .log {
+    background-color: #11111b;
+    padding: 10px;
+    border-radius: 6px;
+    height: 180px;
+    overflow-y: auto;
+    font-size: 0.9em;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .log-entry {
+    border-bottom: 1px solid #1e1e2e;
+    padding-bottom: 4px;
+  }
+  button {
+    background-color: #89b4fa;
+    color: #11111b;
+    border: none;
+    padding: 12px;
+    font-size: 1em;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  button:hover { background-color: #b4befe; }
+  .rules-list {
+    font-size: 0.8em;
+    color: #a6adc8;
+    padding-left: 18px;
+    margin: 0;
+  }
+    .kelluva-kuva {
+    position: absolute; /* Kiinnittää kuvan ruudulle, eikä se siirrä muuta sisältöä */
+    top: 614px;       /* Etäisyys ruudun yläreunasta (voit käyttää myös bottom) */
+    right: 594px;     /* Etäisyys ruudun oikeasta reunasta (voit käyttää myös left) */
+    width: 480px;    /* Kuvan leveys (muuta tätä kokoa varten) */
+    height: 150px;    /* Säilyttää kuvan alkuperäiset mittasuhteet */
+    z-index: 1000;   /* Korkea luku varmistaa, että kuva on kaiken muun päällä */
+    pointer-events: none; /* Valinnainen: estää kuvaa blokkaamasta hiiren klikkauksia sen alta */
+  }
+
+</style>
+</head>
+<body>
+  <img src="shakkitausta.png" alt="Koriste" class="kelluva-kuva">
+  
+  <a href="valikko3.html">
+    <button style="position:absolute; top:10px; right:10px; padding:10px 14px; font-size:16px; cursor:pointer;">⬅️ Takaisin</button>
+</a>
+
+  <h1>BruhGPT Shakkibotti 🤖♟️</h1>
+  <div class="subtitle">Sinä pelaat valkoisilla. BruhGPT pelaa mustilla JA HUIJAA JOKA VUOROLLA.</div>
+
+  <div class="game-container">
+    <div id="board"></div>
+
+    <div class="sidebar">
+      <div class="status-box" id="status">Sinun vuorosi (Valkoinen)</div>
+      
+      <div class="cheat-box">
+        <div class="cheat-title" id="cheat-header">BruhGPT:n tila: Odottaa</div>
+        <div id="cheat-desc">Tee ensimmäinen siirtosi aloittaaksesi kaaoksen.</div>
+      </div>
+
+      <div class="log" id="log"></div>
+
+      <button onclick="resetGame()">Aloita uusi peli</button>
+
+      <div>
+        <strong>BruhGPT:n erikoissäännöt (1–7):</strong>
+        <ol class="rules-list">
+          <li>Spawnaa oman nappulan tyhjään tai oman päälle</li>
+          <li>Syö oman nappulansa</li>
+          <li>Liikuttaa kuninkaan shakkiin (voit syödä sen!)</li>
+          <li>Teleporttaa minkä tahansa oman nappulan</li>
+          <li>Tekee "feikkishakin" millä tahansa nappulalla</li>
+          <li>Liikkuu sääntöjen vastaisesti tyhjään ruutuun</li>
+          <li>Syö sinun nappulasi sääntöjen vastaisesti</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+<script>
+const PIECES = {
+  wK: '♔', wQ: '♕', wR: '♖', wB: '♗', wN: '♘', wP: '♙',
+  bK: '♚', bQ: '♛', bR: '♜', bB: '♝', bN: '♞', bP: '♟'
+};
+
+let board = [];
+let turn = 'w';
+let selected = null;
+let validMoves = [];
+let gameOver = false;
+let lastMove = null;
+
+function initBoard() {
+  board = [
+    ['bR','bN','bB','bQ','bK','bB','bN','bR'],
+    ['bP','bP','bP','bP','bP','bP','bP','bP'],
+    [null,null,null,null,null,null,null,null],
+    [null,null,null,null,null,null,null,null],
+    [null,null,null,null,null,null,null,null],
+    [null,null,null,null,null,null,null,null],
+    ['wP','wP','wP','wP','wP','wP','wP','wP'],
+    ['wR','wN','wB','wQ','wK','wB','wN','wR']
+  ];
+}
+
+function resetGame() {
+  initBoard();
+  turn = 'w';
+  selected = null;
+  validMoves = [];
+  gameOver = false;
+  lastMove = null;
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('status').innerText = 'Sinun vuorosi (Valkoinen)';
+  document.getElementById('cheat-header').innerText = 'BruhGPT:n tila: Odottaa';
+  document.getElementById('cheat-desc').innerText = 'Tee siirtosi!';
+  renderBoard();
+}
+
+function addLog(text, color = '#cdd6f4') {
+  const log = document.getElementById('log');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.style.color = color;
+  entry.innerText = text;
+  log.prepend(entry);
+}
+
+function coordToAlg(r, c) {
+  return String.fromCharCode(97 + c) + (8 - r);
+}
+
+function renderBoard() {
+  const boardEl = document.getElementById('board');
+  boardEl.innerHTML = '';
+
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const sq = document.createElement('div');
+      sq.className = 'square ' + ((r + c) % 2 === 0 ? 'light' : 'dark');
+      
+      if (lastMove && ((lastMove.fr === r && lastMove.fc === c) || (lastMove.tr === r && lastMove.tc === c))) {
+        sq.classList.add('last-move');
+      }
+      if (selected && selected.r === r && selected.c === c) {
+        sq.classList.add('selected');
+      }
+
+      const move = validMoves.find(m => m.r === r && m.c === c);
+      if (move) {
+        if (board[r][c]) sq.classList.add('valid-capture');
+        else sq.classList.add('valid-move');
+      }
+
+      const piece = board[r][c];
+      if (piece) sq.innerText = PIECES[piece];
+
+      sq.onclick = () => onSquareClick(r, c);
+      boardEl.appendChild(sq);
+    }
+  }
+}
+
+function onSquareClick(r, c) {
+  if (gameOver || turn !== 'w') return;
+
+  const move = validMoves.find(m => m.r === r && m.c === c);
+  if (move) {
+    executePlayerMove(selected.r, selected.c, r, c);
+    return;
+  }
+
+  const piece = board[r][c];
+  if (piece && piece.startsWith('w')) {
+    selected = { r, c };
+    validMoves = getLegalMovesForWhite(r, c);
+    renderBoard();
+  } else {
+    selected = null;
+    validMoves = [];
+    renderBoard();
+  }
+}
+
+function executePlayerMove(fr, fc, tr, tc) {
+  const movingPiece = board[fr][fc];
+  const targetPiece = board[tr][tc];
+
+  board[tr][tc] = movingPiece;
+  board[fr][fc] = null;
+
+  // Sotilaan korotus kuningattareksi
+  if (movingPiece === 'wP' && tr === 0) {
+    board[tr][tc] = 'wQ';
+  }
+
+  lastMove = { fr, fc, tr, tc };
+  selected = null;
+  validMoves = [];
+
+  addLog(`Sinä: ${PIECES[movingPiece]} ${coordToAlg(fr, fc)} → ${coordToAlg(tr, tc)}`);
+
+  // Tarkistetaan söikö pelaaja BruhGPT:n kuninkaan (erityisesti säännön 3 jälkeen!)
+  if (targetPiece === 'bK') {
+    endGame('VOITIT PELIN! Söit BruhGPT:n kuninkaan!');
+    return;
+  }
+
+  turn = 'b';
+  document.getElementById('status').innerText = 'BruhGPT miettii huijausta...';
+  renderBoard();
+
+  setTimeout(bruhGptTurn, 700);
+}
+
+function endGame(msg) {
+  gameOver = true;
+  document.getElementById('status').innerText = msg;
+  addLog(msg, '#a6e3a1');
+  renderBoard();
+}
+
+// --- PELAAJAN LAILLISET SIIRROT ---
+function getPseudoMoves(b, r, c) {
+  const p = b[r][c];
+  if (!p) return [];
+  const color = p[0];
+  const type = p[1];
+  const moves = [];
+
+  const addIfValid = (nr, nc) => {
+    if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+      if (!b[nr][nc] || b[nr][nc][0] !== color) {
+        moves.push({ r: nr, c: nc });
+      }
+    }
+  };
+
+  if (type === 'P') {
+    const dir = color === 'w' ? -1 : 1;
+    const startRow = color === 'w' ? 6 : 1;
+    if (r + dir >= 0 && r + dir < 8 && !b[r + dir][c]) {
+      moves.push({ r: r + dir, c });
+      if (r === startRow && !b[r + 2 * dir][c]) {
+        moves.push({ r: r + 2 * dir, c });
+      }
+    }
+    for (let dc of [-1, 1]) {
+      if (r + dir >= 0 && r + dir < 8 && c + dc >= 0 && c + dc < 8) {
+        const target = b[r + dir][c + dc];
+        if (target && target[0] !== color) {
+          moves.push({ r: r + dir, c: c + dc });
+        }
+      }
+    }
+  } else if (type === 'N') {
+    const jumps = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+    jumps.forEach(([dr, dc]) => addIfValid(r + dr, c + dc));
+  } else if (type === 'K') {
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr !== 0 || dc !== 0) addIfValid(r + dr, c + dc);
+      }
+    }
+  } else {
+    const dirs = [];
+    if (type === 'R' || type === 'Q') dirs.push([-1,0],[1,0],[0,-1],[0,1]);
+    if (type === 'B' || type === 'Q') dirs.push([-1,-1],[-1,1],[1,-1],[1,1]);
+    for (let [dr, dc] of dirs) {
+      let nr = r + dr, nc = c + dc;
+      while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+        if (!b[nr][nc]) {
+          moves.push({ r: nr, c: nc });
+        } else {
+          if (b[nr][nc][0] !== color) moves.push({ r: nr, c: nc });
+          break;
+        }
+        nr += dr; nc += dc;
+      }
+    }
+  }
+  return moves;
+}
+
+function isSquareAttackedBy(b, tr, tc, attackerColor) {
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      if (b[r][c] && b[r][c][0] === attackerColor) {
+        const moves = getPseudoMoves(b, r, c);
+        if (moves.some(m => m.r === tr && m.c === tc)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function findKing(b, color) {
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      if (b[r][c] === color + 'K') return { r, c };
+    }
+  }
+  return null;
+}
+
+function getLegalMovesForWhite(r, c) {
+  const pseudo = getPseudoMoves(board, r, c);
+  return pseudo.filter(m => {
+    // Pelaaja saa aina syödä mustan kuninkaan jos se on uhattuna!
+    if (board[m.r][m.c] === 'bK') return true;
+
+    const copy = board.map(row => [...row]);
+    copy[m.r][m.c] = copy[r][c];
+    copy[r][c] = null;
+    const wk = findKing(copy, 'w');
+    if (!wk) return false;
+    return !isSquareAttackedBy(copy, wk.r, wk.c, 'b');
+  });
+}
+
+// --- BRUHGPT:N TEKOÄLY JA ERIKOISSÄÄNNÖT (1-7) ---
+function bruhGptTurn() {
+  const bk = findKing(board, 'b');
+  if (!bk) {
+    endGame('VOITIT! BruhGPT:llä ei ole kuningasta!');
+    return;
+  }
+
+  // Arvotaan numero 1 - 7
+  const rule = Math.floor(Math.random() * 7) + 1;
+  let success = false;
+
+  const blackPieces = [];
+  const whitePieces = [];
+  const emptySquares = [];
+
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      if (!board[r][c]) emptySquares.push({ r, c });
+      else if (board[r][c].startsWith('b')) blackPieces.push({ r, c, p: board[r][c] });
+      else whitePieces.push({ r, c, p: board[r][c] });
+    }
+  }
+
+  const rand = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  if (rule === 1) {
+    // 1. Oman nappulan spawnaaminen tyhjään tai oman nappulan päälle (ei kuninkaan päälle)
+    const validTargets = [
+      ...emptySquares,
+      ...blackPieces.filter(x => x.p !== 'bK')
+    ];
+    if (validTargets.length > 0) {
+      const target = rand(validTargets);
+      const spawnPool = ['bQ', 'bR', 'bB', 'bN', 'bP'];
+      const spawned = rand(spawnPool);
+      const prev = board[target.r][target.c];
+      board[target.r][target.c] = spawned;
+      lastMove = { fr: target.r, fc: target.c, tr: target.r, tc: target.c };
+      
+      const extraText = prev ? ` (korvasi oman ${PIECES[prev]})` : '';
+      updateCheatUI(1, 'Oman nappulan spawnaaminen', `BruhGPT loi tyhjästä nappulan ${PIECES[spawned]} ruutuun ${coordToAlg(target.r, target.c)}${extraText}!`);
+      success = true;
+    }
+  } 
+  else if (rule === 2) {
+    // 2. Oman nappulan syöminen (ei syö omaa kuningastaan)
+    const nonKings = blackPieces.filter(x => x.p !== 'bK');
+    if (blackPieces.length >= 2 && nonKings.length > 0) {
+      const victim = rand(nonKings);
+      const eaters = blackPieces.filter(x => x.r !== victim.r || x.c !== victim.c);
+      const eater = rand(eaters);
+
+      board[victim.r][victim.c] = eater.p;
+      board[eater.r][eater.c] = null;
+      lastMove = { fr: eater.r, fc: eater.c, tr: victim.r, tc: victim.c };
+
+      updateCheatUI(2, 'Oman nappulan syöminen', `BruhGPT:n ${PIECES[eater.p]} söi oman ${PIECES[victim.p]} ruudussa ${coordToAlg(victim.r, victim.c)}!`);
+      success = true;
+    }
+  } 
+  else if (rule === 3) {
+    // 3. Liikuttaa kuninkaan kohtaan jossa on shakki (pelaaja voi syödä sen!)
+    const kingMoves = getPseudoMoves(board, bk.r, bk.c);
+    const dangerMoves = kingMoves.filter(m => isSquareAttackedBy(board, m.r, m.c, 'w'));
+    const allDanger = [];
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        if ((!board[r][c] || board[r][c].startsWith('w')) && isSquareAttackedBy(board, r, c, 'w')) {
+          allDanger.push({ r, c });
+        }
+      }
+    }
+
+    const chosen = dangerMoves.length > 0 ? rand(dangerMoves) : (allDanger.length > 0 ? rand(allDanger) : null);
+    if (chosen) {
+      board[chosen.r][chosen.c] = 'bK';
+      board[bk.r][bk.c] = null;
+      lastMove = { fr: bk.r, fc: bk.c, tr: chosen.r, tc: chosen.c };
+
+      updateCheatUI(3, 'Kuningas shakkiin!', `BruhGPT siirsi kuninkaansa suoraan tuleen ruutuun ${coordToAlg(chosen.r, chosen.c)}! SYÖ SE!`);
+      success = true;
+    }
+  } 
+  else if (rule === 4) {
+    // 4. Teleporttaa nappula
+    if (blackPieces.length > 0 && emptySquares.length > 0) {
+      const mover = rand(blackPieces);
+      const dest = rand(emptySquares);
+      board[dest.r][dest.c] = mover.p;
+      board[mover.r][mover.c] = null;
+      lastMove = { fr: mover.r, fc: mover.c, tr: dest.r, tc: dest.c };
+
+      updateCheatUI(4, 'Teleporttaus', `BruhGPT teleporttasi ${PIECES[mover.p]} ruudusta ${coordToAlg(mover.r, mover.c)} ruutuun ${coordToAlg(dest.r, dest.c)}!`);
+      success = true;
+    }
+  } 
+  else if (rule === 5) {
+    // 5. Tee shakki (nappula siirtyy valkoisen kuninkaan lähelle ja julistaa shakin kuin eri nappula)
+    const wk = findKing(board, 'w');
+    const nonKings = blackPieces.filter(x => x.p !== 'bK');
+    if (wk && nonKings.length > 0) {
+      const mover = rand(nonKings);
+      const candidates = emptySquares.filter(sq => Math.abs(sq.r - wk.r) <= 2 && Math.abs(sq.c - wk.c) <= 2);
+      const dest = candidates.length > 0 ? rand(candidates) : (emptySquares.length > 0 ? rand(emptySquares) : null);
+
+      if (dest) {
+        board[dest.r][dest.c] = mover.p;
+        board[mover.r][mover.c] = null;
+        lastMove = { fr: mover.r, fc: mover.c, tr: dest.r, tc: dest.c };
+
+        const fakeRoles = ['torni', 'lähetti', 'kuningatar', 'ratsu'];
+        const fakeRole = rand(fakeRoles);
+        updateCheatUI(5, 'Feikkishakki!', `BruhGPT siirsi ${PIECES[mover.p]} ruutuun ${coordToAlg(dest.r, dest.c)} ja huusi: "SHAKKI! (Se liikkuu nyt kuin ${fakeRole})"`);
+        success = true;
+      }
+    }
+  } 
+  else if (rule === 6) {
+    // 6. Liikuttaa nappulaa sääntöjen vastaisesti (esim. torni kuin hevonen)
+    const nonKings = blackPieces.filter(x => x.p !== 'bK');
+    if (nonKings.length > 0 && emptySquares.length > 0) {
+      const mover = rand(nonKings);
+      const legal = getPseudoMoves(board, mover.r, mover.c);
+      const illegalEmpty = emptySquares.filter(sq => !legal.some(l => l.r === sq.r && l.c === sq.c));
+      const dest = illegalEmpty.length > 0 ? rand(illegalEmpty) : rand(emptySquares);
+
+      board[dest.r][dest.c] = mover.p;
+      board[mover.r][mover.c] = null;
+      lastMove = { fr: mover.r, fc: mover.c, tr: dest.r, tc: dest.c };
+
+      updateCheatUI(6, 'Laiton liike', `BruhGPT liikutti ${PIECES[mover.p]} sääntöjen vastaisesti ruudusta ${coordToAlg(mover.r, mover.c)} ruutuun ${coordToAlg(dest.r, dest.c)}!`);
+      success = true;
+    }
+  } 
+  else if (rule === 7) {
+    // 7. Syö vastustajan nappulan sääntöjen vastaisesti
+    const edibleWhites = whitePieces.filter(x => x.p !== 'wK');
+    if (blackPieces.length > 0 && edibleWhites.length > 0) {
+      const attacker = rand(blackPieces);
+      const target = rand(edibleWhites);
+
+      board[target.r][target.c] = attacker.p;
+      board[attacker.r][attacker.c] = null;
+      lastMove = { fr: attacker.r, fc: attacker.c, tr: target.r, tc: target.c };
+
+      updateCheatUI(7, 'Laiton syönti!', `BruhGPT:n ${PIECES[attacker.p]} hyppäsi laittomasti ruudusta ${coordToAlg(attacker.r, attacker.c)} ja söi sinun ${PIECES[target.p]} (${coordToAlg(target.r, target.c)})!`);
+      success = true;
+    }
+  }
+
+  // Varasiirto, jos arvottu sääntö ei ollut mahdollinen
+  if (!success) {
+    const mover = rand(blackPieces);
+    if (emptySquares.length > 0) {
+      const dest = rand(emptySquares);
+      board[dest.r][dest.c] = mover.p;
+      board[mover.r][mover.c] = null;
+      lastMove = { fr: mover.r, fc: mover.c, tr: dest.r, tc: dest.c };
+      updateCheatUI(rule, 'Hätähuijaus', `BruhGPT siirsi nappulan ${PIECES[mover.p]} ruutuun ${coordToAlg(dest.r, dest.c)}.`);
+    }
+  }
+
+  turn = 'w';
+  document.getElementById('status').innerText = 'Sinun vuorosi (Valkoinen)';
+  renderBoard();
+}
+
+function updateCheatUI(num, title, desc) {
+  document.getElementById('cheat-header').innerText = `Arvottu sääntö #${num}: ${title}`;
+  document.getElementById('cheat-desc').innerText = desc;
+  addLog(`BruhGPT [Sääntö ${num}]: ${desc}`, '#f38ba8');
+}
+
+// Käynnistetään peli
+resetGame();
+</script>
+</body>
+</html>

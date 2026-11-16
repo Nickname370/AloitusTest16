@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mustansumun Siirtokunta</title>
+<style>
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  background:#101722;
+  color:white;
+  font-family:Arial,sans-serif;
+  overflow:hidden;
+}
+#game {
+  display:block;
+  width:100%;
+  height:100vh;
+  background:#17232d;
+}
+#hud {
+  position:absolute;
+  top:10px;
+  left:10px;
+  background:#111c;
+  border:1px solid #607080;
+  border-radius:10px;
+  padding:12px;
+  line-height:1.7;
+  font-size:14px;
+  pointer-events:none;
+}
+#message {
+  position:absolute;
+  bottom:85px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#101c;
+  padding:12px 20px;
+  border-radius:10px;
+  text-align:center;
+  min-width:220px;
+}
+#shop {
+  display:none;
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:#172534;
+  border:2px solid #66b9d9;
+  border-radius:15px;
+  padding:22px;
+  width:min(340px,90%);
+  box-shadow:0 0 30px #000;
+}
+button {
+  width:100%;
+  padding:12px;
+  margin:5px 0;
+  background:#28536b;
+  border:1px solid #72c9e9;
+  color:white;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:15px;
+}
+button:hover {background:#397b98;}
+#mobile {
+  position:absolute;
+  bottom:10px;
+  left:10px;
+  display:grid;
+  grid-template-columns:45px 45px 45px;
+  gap:4px;
+}
+#mobile button {
+  margin:0;
+  padding:12px 0;
+  background:#263c50dd;
+}
+#actions {
+  position:absolute;
+  right:12px;
+  bottom:15px;
+  width:115px;
+}
+#actions button {padding:15px 5px;}
+</style>
+</head>
+<body>
+<a href="valikko3.html">
+    <button style="position:absolute; width:10%; top:10px; right:10px; padding:10px 14px; font-size:16px; cursor:pointer;">⬅️ Takaisin</button>
+</a>
+
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <b>MUSTANSUMUN</b><br>
+    <b>SIIRTOKUNTA</b><br>
+  💰 Krediitit: <span id="money">100</span><br>
+  ⛏️ Työkalu: <span id="tool">1</span><br>
+  🎒 Reppu: <span id="bag">0/20</span><br>
+  <hr>
+  🪨 Rauta: <span id="iron">0</span><br>
+  🟢 Kronium: <span id="kronium">0</span><br>
+  💎 Aetherium: <span id="aetherium">0</span>
+</div>
+
+<div id="message">Tervetuloa Mustansumun Siirtokuntaan!</div>
+
+<div id="shop">
+  <h2>🏪 Siirtokunnan kauppa</h2>
+  <p>Osta parempia varusteita krediiteillä.</p>
+  <button onclick="upgradeTool()">⛏️ Parempi kaivostyökalu – <span id="toolPrice">150</span> kr</button>
+  <button onclick="upgradeBag()">🎒 Suurempi reppu – <span id="bagPrice">120</span> kr</button>
+  <button onclick="sellAll()">💰 Myy kaikki malmit</button>
+  <button onclick="closeShop()">Poistu kaupasta</button>
+</div>
+
+<div id="mobile">
+  <div></div><button onclick="mobileMove(0,-1)">⬆</button><div></div>
+  <button onclick="mobileMove(-1,0)">⬅</button>
+  <button onclick="mobileMove(0,1)">⬇</button>
+  <button onclick="mobileMove(1,0)">➡</button>
+</div>
+
+<div id="actions">
+  <button onclick="mine()">⛏️ KAIVA</button>
+  <button onclick="interact()">E – TOIMI</button>
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const TILE = 48;
+const MAP_W = 35;
+const MAP_H = 28;
+
+let money = 100;
+let iron = 0;
+let kronium = 0;
+let aetherium = 0;
+let tool = 1;
+let bagSize = 20;
+let inventory = 0;
+
+let toolPrice = 150;
+let bagPrice = 120;
+
+const player = {
+  x: 8*TILE,
+  y: 8*TILE,
+  speed: 3,
+  color: "#45d8ff"
+};
+
+let keys = {};
+let shopOpen = false;
+let messageTimer = 0;
+
+let camera = {x:0,y:0};
+
+const map = [];
+const ores = [];
+const buildings = [];
+
+function createWorld() {
+  for(let y=0;y<MAP_H;y++) {
+    map[y]=[];
+    for(let x=0;x<MAP_W;x++) {
+      map[y][x]=Math.random();
+    }
+  }
+
+  // Rakennukset
+  buildings.push(
+    {x:5,y:5,w:3,h:2,name:"KAUPPA",color:"#bd8b45"},
+    {x:11,y:5,w:3,h:2,name:"ASUNNOT",color:"#597b9c"},
+    {x:5,y:10,w:3,h:2,name:"VARASTO",color:"#768c72"},
+    {x:12,y:11,w:3,h:2,name:"TELAKKA",color:"#8b657d"}
+  );
+
+  // Alkumalmit
+  for(let i=0;i<65;i++) {
+    spawnOre();
+  }
+}
+
+// Luo uuden malmiesiintymän satunnaiseen paikkaan kartalla.
+// Uusi esiintymä ei ilmesty rakennuksen tai toisen malmin päälle.
+function spawnOre() {
+  for(let attempt=0;attempt<100;attempt++) {
+    const x=Math.floor(Math.random()*MAP_W);
+    const y=Math.floor(Math.random()*MAP_H);
+
+    // Pidetään siirtokunnan rakennukset ja aloitusalue rauhallisina.
+    if(x<16 && y<15) continue;
+
+    const insideBuilding=buildings.some(b =>
+      x>=b.x && x<b.x+b.w && y>=b.y && y<b.y+b.h
+    );
+    if(insideBuilding) continue;
+
+    const tooClose=ores.some(ore =>
+      Math.hypot(ore.x-(x*TILE+TILE/2),ore.y-(y*TILE+TILE/2))<TILE*1.5
+    );
+    if(tooClose) continue;
+
+    const type=Math.random();
+    ores.push({
+      x:x*TILE+TILE/2,
+      y:y*TILE+TILE/2,
+      type:type<0.48?"iron":
+           type<0.82?"kronium":"aetherium",
+      amount:3+Math.floor(Math.random()*5)
+    });
+    return true;
+  }
+  return false;
+}
+
+createWorld();
+
+function notify(text) {
+  document.getElementById("message").innerText=text;
+  messageTimer=180;
+}
+
+function updateHUD() {
+  document.getElementById("money").innerText=money;
+  document.getElementById("iron").innerText=iron;
+  document.getElementById("kronium").innerText=kronium;
+  document.getElementById("aetherium").innerText=aetherium;
+  document.getElementById("tool").innerText=tool;
+  document.getElementById("bag").innerText=inventory+"/"+bagSize;
+  document.getElementById("toolPrice").innerText=toolPrice;
+  document.getElementById("bagPrice").innerText=bagPrice;
+}
+
+function isBlocked(x,y) {
+  const tx=Math.floor(x/TILE);
+  const ty=Math.floor(y/TILE);
+
+  if(tx<0 || ty<0 || tx>=MAP_W || ty>=MAP_H)
+    return true;
+
+  for(const b of buildings) {
+    if(tx>=b.x && tx<b.x+b.w &&
+       ty>=b.y && ty<b.y+b.h)
+       return true;
+  }
+  return false;
+}
+
+function move(dx,dy) {
+  if(shopOpen) return;
+
+  let nx=player.x+dx*player.speed;
+  let ny=player.y+dy*player.speed;
+
+  if(!isBlocked(nx,player.y)) player.x=nx;
+  if(!isBlocked(player.x,ny)) player.y=ny;
+}
+
+function mobileMove(dx,dy) {
+  move(dx*8,dy*8);
+}
+
+document.addEventListener("keydown",e=>{
+  keys[e.key.toLowerCase()]=true;
+
+  if(e.key==="e") interact();
+  if(e.key===" " || e.key.toLowerCase()==="f") mine();
+  if(e.key==="Escape") closeShop();
+});
+
+document.addEventListener("keyup",e=>{
+  keys[e.key.toLowerCase()]=false;
+});
+
+function mine() {
+  if(shopOpen) return;
+
+  let closest=null;
+  let distance=65;
+
+  for(const ore of ores) {
+    const d=Math.hypot(player.x-ore.x,player.y-ore.y);
+    if(d<distance && ore.amount>0) {
+      closest=ore;
+      distance=d;
+    }
+  }
+
+  if(!closest) {
+    notify("Ei malmia lähellä! Etsi kaivosalue.");
+    return;
+  }
+
+  if(inventory>=bagSize) {
+    notify("🎒 Reppu on täynnä! Myy malmit.");
+    return;
+  }
+
+  let amount=Math.min(tool,closest.amount,bagSize-inventory);
+  closest.amount-=amount;
+  inventory+=amount;
+
+  if(closest.type==="iron") iron+=amount;
+  if(closest.type==="kronium") kronium+=amount;
+  if(closest.type==="aetherium") aetherium+=amount;
+
+  notify("⛏️ Kaivoit "+amount+" yksikköä: "+closest.type);
+  updateHUD();
+}
+
+function distanceToBuilding(b) {
+  const cx=(b.x+b.w/2)*TILE;
+  const cy=(b.y+b.h/2)*TILE;
+  return Math.hypot(player.x-cx,player.y-cy);
+}
+
+function interact() {
+  if(shopOpen) return;
+
+  const shop=buildings[0];
+  const warehouse=buildings[2];
+
+  if(distanceToBuilding(shop)<150) {
+    openShop();
+    return;
+  }
+
+  if(distanceToBuilding(warehouse)<150) {
+    sellAll();
+    return;
+  }
+
+  notify("Ei mitään käytettävää lähellä.");
+}
+
+function openShop() {
+  shopOpen=true;
+  document.getElementById("shop").style.display="block";
+}
+
+function closeShop() {
+  shopOpen=false;
+  document.getElementById("shop").style.display="none";
+}
+
+function sellAll() {
+  const earned=iron*8+kronium*30+aetherium*90;
+
+  if(inventory===0) {
+    notify("Sinulla ei ole myytävää!");
+    return;
+  }
+
+  money+=earned;
+  notify("💰 Myit malmit! Ansaitsit "+earned+" krediittiä.");
+
+  iron=0;
+  kronium=0;
+  aetherium=0;
+  inventory=0;
+
+  updateHUD();
+}
+
+function upgradeTool() {
+  if(money<toolPrice) {
+    notify("Ei tarpeeksi krediittejä!");
+    return;
+  }
+
+  money-=toolPrice;
+  tool++;
+  toolPrice=Math.floor(toolPrice*1.8);
+
+  notify("⛏️ Kaivostyökalusi parani!");
+  updateHUD();
+}
+
+function upgradeBag() {
+  if(money<bagPrice) {
+    notify("Ei tarpeeksi krediittejä!");
+    return;
+  }
+
+  money-=bagPrice;
+  bagSize+=15;
+  bagPrice=Math.floor(bagPrice*1.7);
+
+  notify("🎒 Reppusi kapasiteetti kasvoi!");
+  updateHUD();
+}
+
+function drawWorld() {
+  for(let y=0;y<MAP_H;y++) {
+    for(let x=0;x<MAP_W;x++) {
+      const sx=x*TILE-camera.x;
+      const sy=y*TILE-camera.y;
+
+      ctx.fillStyle=(x+y)%2===0?"#273b3d":"#304443";
+      ctx.fillRect(sx,sy,TILE,TILE);
+
+      if(map[y][x]>.92) {
+        ctx.fillStyle="#475557";
+        ctx.fillRect(sx+8,sy+10,8,8);
+      }
+
+      ctx.strokeStyle="#ffffff08";
+      ctx.strokeRect(sx,sy,TILE,TILE);
+    }
+  }
+}
+
+function drawBuildings() {
+  for(const b of buildings) {
+    const x=b.x*TILE-camera.x;
+    const y=b.y*TILE-camera.y;
+
+    ctx.fillStyle=b.color;
+    ctx.fillRect(x,y,b.w*TILE,b.h*TILE);
+
+    ctx.fillStyle="#19232e";
+    ctx.fillRect(x+12,y+15,b.w*TILE-24,b.h*TILE-30);
+
+    ctx.fillStyle="#ffffff";
+    ctx.font="bold 12px Arial";
+    ctx.textAlign="center";
+    ctx.fillText(b.name,x+b.w*TILE/2,y-7);
+
+    ctx.fillStyle="#8ad9ed";
+    ctx.fillRect(x+b.w*TILE/2-5,y+b.h*TILE/2-5,10,10);
+  }
+}
+
+function drawOres() {
+  for(const ore of ores) {
+    if(ore.amount<=0) continue;
+
+    const x=ore.x-camera.x;
+    const y=ore.y-camera.y;
+
+    ctx.beginPath();
+    ctx.arc(x,y,15,0,Math.PI*2);
+
+    ctx.fillStyle=
+      ore.type==="iron"?"#a3a9ae":
+      ore.type==="kronium"?"#39c875":"#e6f4ff";
+
+    ctx.fill();
+
+    ctx.fillStyle="#17232d";
+    ctx.font="bold 10px Arial";
+    ctx.textAlign="center";
+    ctx.fillText(
+      ore.type==="iron"?"Fe":
+      ore.type==="kronium"?"Kr":"Ae",
+      x,y+4
+    );
+  }
+}
+
+function drawPlayer() {
+  const x=player.x-camera.x;
+  const y=player.y-camera.y;
+
+  // Varjo
+  ctx.fillStyle="#0008";
+  ctx.beginPath();
+  ctx.ellipse(x,y+13,13,6,0,0,Math.PI*2);
+  ctx.fill();
+
+  // Hahmo
+  ctx.fillStyle=player.color;
+  ctx.fillRect(x-9,y-12,18,25);
+
+  ctx.fillStyle="#d7f7ff";
+  ctx.beginPath();
+  ctx.arc(x,y-15,9,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle="#182c3d";
+  ctx.fillRect(x-5,y-18,10,5);
+}
+
+function draw() {
+  camera.x=player.x-canvas.width/2;
+  camera.y=player.y-canvas.height/2;
+
+  camera.x=Math.max(0,Math.min(camera.x,MAP_W*TILE-canvas.width));
+  camera.y=Math.max(0,Math.min(camera.y,MAP_H*TILE-canvas.height));
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  drawWorld();
+  drawOres();
+  drawBuildings();
+  drawPlayer();
+}
+
+let oreSpawnTimer=0;
+
+function loop() {
+  // Uusia malmeja syntyy vähitellen koko pelin ajan.
+  // Aktiivisten esiintymien määrällä on yläraja, jotta peli pysyy kevyenä.
+  oreSpawnTimer++;
+  if(oreSpawnTimer>=240) { // noin 4 sekunnin välein 60 FPS:llä
+    oreSpawnTimer=0;
+    const activeOres=ores.filter(ore=>ore.amount>0).length;
+    if(activeOres<90) spawnOre();
+  }
+
+  if(!shopOpen) {
+    let dx=0,dy=0;
+
+    if(keys["w"]||keys["arrowup"]) dy--;
+    if(keys["s"]||keys["arrowdown"]) dy++;
+    if(keys["a"]||keys["arrowleft"]) dx--;
+    if(keys["d"]||keys["arrowright"]) dx++;
+
+    if(dx!==0||dy!==0) {
+      const length=Math.hypot(dx,dy);
+      move(dx/length,dy/length);
+    }
+  }
+
+  draw();
+
+  if(messageTimer>0) messageTimer--;
+
+  requestAnimationFrame(loop);
+}
+
+window.addEventListener("resize",()=>{
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+});
+
+updateHUD();
+loop();
+</script>
+</body>
+</html>

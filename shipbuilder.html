@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galaktinen Alusrakentaja</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#050b18;color:#d9edff;
+ font-family:Arial,sans-serif;
+ background-image:radial-gradient(#173052 1px,transparent 1px);
+ background-size:25px 25px;
+}
+header{
+ text-align:center;padding:25px 12px;
+ background:linear-gradient(120deg,#07152b,#102b50,#07152b);
+ border-bottom:2px solid #26c9ff;
+}
+h1{color:#43d9ff}
+main{max-width:1100px;margin:auto;padding:15px}
+.panel{
+ background:#0c1930;border:1px solid #23547a;
+ border-radius:12px;padding:16px;margin-bottom:15px;
+}
+h2{color:#42d9ff;font-size:19px}
+label{display:block;margin:12px 0 5px;color:#a8d9f5}
+input,
+select{
+ width:100%;padding:12px;background:#071326;
+ color:white;border:1px solid #2876a5;
+ border-radius:7px;font-size:15px;
+  max-height: 45px;
+}
+.grid{
+ display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+ gap:14px;
+}
+button{
+ background:#087eaf;color:white;border:0;
+ padding:12px;border-radius:7px;cursor:pointer;
+ font-weight:bold;margin:5px 3px;
+}
+button:hover{background:#13b9e8}
+.ship{
+ text-align:center;padding:25px;
+ background:radial-gradient(ellipse,#15365b,#071326 70%);
+ border-radius:10px;margin-top:12px;
+}
+.shipicon{font-size:50px;filter:drop-shadow(0 0 15px #23caff)}
+.price{font-size:29px;color:#57edb4;font-weight:bold}
+.small{font-size:12px;color:#8daec9}
+.stat{margin:13px 0}
+.statline{display:flex;justify-content:space-between}
+.bar{height:12px;background:#142943;border-radius:10px;overflow:hidden}
+.fill{height:100%;background:linear-gradient(90deg,#087eaf,#49eaff)}
+#report{white-space:pre-line;line-height:1.7}
+.info{
+ padding:12px;background:#102642;border-left:3px solid #32cfff;
+ border-radius:5px;line-height:1.6;font-size:14px;
+}
+.warning{color:#ffca70}
+footer{text-align:center;padding:25px;color:#6687a5}
+</style>
+</head>
+<body>
+<a href="valikko3.html">
+    <button style="position:absolute; top:10px; right:10px; padding:10px 14px; font-size:16px; cursor:pointer;">⬅️ Takaisin</button>
+</a>
+
+<header>
+<h1>🚀 GALAKTINEN ALUSRAKENTAJA</h1>
+<p>Yhdistyneet Tähtikunnat – Sotilastekninen suunnittelukeskus</p>
+<div class="small">PAXIA PRIME • ALUSREKISTERI • VERSIO 2.0</div>
+</header>
+
+<main>
+
+<div class="panel">
+<h2>📋 01 – Aluksen tunnistetiedot</h2>
+
+<label>Aluksen nimi</label>
+<input id="name" value="Uusi Galaktinen Alus">
+
+<button onclick="randomName()">🎲 Generoi satunnainen nimi</button>
+
+<label>Omistaja / Valtio</label>
+<select id="owner">
+<option>Galaktinen Liitto</option>
+<option>Marsin Tasavalta</option>
+<option>Arcturusin Kuningaskunta</option>
+<option>Andromedan Kauppaliitto</option>
+<option>Vega-kauppahuone</option>
+<option>Orion Mining Consortium</option>
+<option>Varjo-Kraken</option>
+<option>Nova Imperium</option>
+<option>Crimson Fleet</option>
+<option>Aetherium Institute</option>
+<option>Iron Dominion</option>
+<option>Stellar Guardians</option>
+<option>Voidborn</option>
+
+<option value="custom">Oma valtio / omistaja</option>
+</select>
+
+<div id="customOwner" style="display:none">
+<label>Kirjoita oman valtion / omistajan nimi</label>
+<input id="customName" placeholder="Esim. Maapallo">
+</div>
+</div>
+
+<div class="grid">
+
+<div class="panel">
+<h2>🛸 02 – Alusrunko</h2>
+<label>Valitse alusluokka</label>
+<select id="hull">
+<option value="H2">H2 Kaivosalus </option>
+<option value="E17">E17 Tiedusteluhävittäjä</option>
+<option value="E29">E29 Nopea saattajahävittäjä</option>
+<option value="E4">E4 Taisteluhävittäjä</option>
+<option value="H56">H56 Raskas Pommittaja</option>
+<option value="T25">T25 Monitoimisukkula</option>
+<option value="U44">U44 Pitkän matkan tutkimusalus</option>
+<option value="O2">O2 Kaivostukialus</option>
+<option value="V27">V27 Jään tutkimusfregatti</option>
+<option value="T19">T19 Sumualueiden partiofregatti</option>
+<option value="V12">V12 Vartiofregatti</option>
+<option value="W36">W36 Puolustusristeilijä</option>
+<option value="Q93">Q93 Taisteluristeilijä</option>
+<option value="Y72">Y72 Taisteluristeilijä</option>
+<option value="Z53">Z53 Lentotukialus</option>
+<option value="X68">X68 Piiritysalus</option>
+<option value="QM36">QM36 Avaruussairaala</option>
+<option value="G32">G32 Tähdensiirtäjä</option>
+</select>
+
+<div class="ship">
+<div class="shipicon" id="shipicon">🌌</div>
+<strong id="shiptitle">G32 Tähdensiirtäjä</strong>
+<p class="small" id="shipdesc"></p>
+</div>
+<div id="specialInfo" class="info"></div>
+</div>
+
+<div class="panel">
+<h2>⚡ 03 – Moottorijärjestelmä</h2>
+<label>Valitse moottori</label>
+<select id="engine">
+<option value="standard">Standardi plasma (500 000)</option>
+<option value="ion">Ionimoottori (2 000 000)</option>
+<option value="oblivion">Oblivioni-poimu (12 000 000)</option>
+<option value="quantum">Kvanttimoottori (25 000 000)</option>
+<option value="quantumjump">Kvanttihyppyreaktori (50 000 000)</option>
+</select>
+</div>
+
+<div class="panel">
+<h2>🛡️ 04 – Suojajärjestelmä</h2>
+
+<label>Valitse panssari</label>
+<select id="shield">
+    <option value="none">Ei erillistä panssaria (0)</option>
+    <option value="titaani">Titaanipanssari (500 000)</option>
+    <option value="kronium">Kronium-panssari (10 000 000)</option>
+    <option value="aetherium">Aetherium-panssari (18 000 000)</option>
+    <option value="oblivion">Oblivion-panssari (35 000 000)</option>
+</select>
+
+<label>Valitse energiakilpi</label>
+<select id="shield2">
+<option value="none">Ei energiakilpeä (0)</option>
+<option value="basic">Perussuojakilpi (1 000 000)</option>
+<option value="plasma">Plasmasuojakilpi (2 000 000)</option>
+<option value="aetherium">Aetherium-Oblivioni-kilpi (15 000 000)</option>
+<option value="titanium">Super-Aetherium-energiakilpi (30 000 000)</option>
+</select>
+</div>
+
+<div class="panel">
+<h2>💥 05 – Asejärjestelmät</h2>
+<label>Ensisijainen ase</label>
+<select id="weapon">
+<option value="none">Ei asetta (0)</option>
+<option value="plasma">Plasmapatteri (1 000 000)</option>
+<option value="laser">Laserjärjestelmä (1 500 000)</option>
+<option value="railgun">RT7-raidetykki (8 000 000)</option>
+<option value="turbo">Raskas turbolaser (12 000 000)</option>
+<option value="kvanttitykki">QX-90 Kvantti-tykki (20 000 000)</option>
+<option value="mega">Giga-magma-tykki (30 000 000)</option>
+</select>
+
+<label>Toissijainen ase</label>
+<select id="weapon2">
+<option value="none">Ei asetta (0)</option>
+<option value="plasma">Plasmapatteri (1 000 000)</option>
+<option value="laser">Lasertykki (1 500 000)</option>
+<option value="emp">EMP-järjestelmä (3 000 000)</option>
+<option value="railgun">RT7-raidetykki (8 000 000)</option>
+<option value="tupla">Kaksoisplasmatorpedojärjestelmä (10 000 000)</option>
+</select>
+</div>
+
+</div>
+</div>
+
+<div class="panel" id="t25Panel" style="display:none">
+<h2>📦 06 – T25 Monitoimisukkulan erikoistoiminnot</h2>
+
+<div class="info">
+T25 ei ole varsinainen taistelualus. Sen tärkein tehtävä on ylläpitää laivaston toimintakykyä logistiikan, kuljetusten ja erikoistehtävien avulla.
+</div>
+
+<label>Modulaarisen rahtitilan käyttötarkoitus</label>
+<select id="module">
+<option value="cargo">📦 Logistiikka ja materiaalikuljetus</option>
+<option value="troops">🪖 Joukkojenkuljetus</option>
+<option value="medical">🏥 Lääkintäosasto</option>
+<option value="diplomatic">🏛️ Diplomaattinen kuljetus</option>
+<option value="special">🕵️ Taktiset erikoisoperaatiot</option>
+</select>
+
+<label>Puolustuksellinen aseistus</label>
+<select id="t25weapon">
+<option value="light">Kevyet puolustuslaserit (200 000)</option>
+<option value="advanced">Parannetut puolustuslaserit (800 000)</option>
+</select>
+
+<div class="info" style="margin-top:12px">
+<strong>Erikoisominaisuudet:</strong>
+<ul>
+<li>VTOL-pystysuora laskeutuminen</li>
+<li>ECM-sensorinhäirintä</li>
+<li>Modulaarinen rahtitila</li>
+<li>Henkilöstön kuljetus</li>
+<li>Lääkintäosastoksi muuntaminen</li>
+<li>Diplomaattiset kuljetukset</li>
+</ul>
+</div>
+</div>
+
+<div class="panel" id="miningPanel" style="display:none">
+<h2>📦 06 – ⛏️ E-LUOKAN KAIVOSTOIMINNOT</h2>
+
+<div id="miningInfo" class="info"></div>
+
+<label>Kaivostoiminto</label>
+<select id="miningMode">
+<option value="kronium">Kroniumin käsittely</option>
+<option value="oblivioni">Oblivionin käsittely</option>
+<option value="aetherium">Aetheriumin käsittely</option>
+<option value="general">Yleinen malmin käsittely</option>
+</select>
+
+<label>Kaivosvarustus</label>
+<select id="miningEquipment">
+<option value="standard">Perusvarustus</option>
+<option value="advanced">Tehostettu teollisuusvarustus</option>
+<option value="elite">Edistynyt automaattinen järjestelmä</option>
+</select>
+</div>
+
+<div class="panel">
+<h2>📊 07 – Aluksen suorituskyky</h2>
+<div id="stats"></div>
+</div>
+
+<div class="panel">
+<h2>💰 08 – Rakennuskustannukset</h2>
+<div class="small">ALUKSEN KOKONAISHINTA</div>
+<div class="price" id="price">0 krediittiä</div>
+<button onclick="calculate()">🔄 Päivitä laskelma</button>
+<button onclick="saveShip()">💾 Tallenna alus</button>
+<button onclick="downloadShip()">📄 Lataa tekninen kortti</button>
+</div>
+
+<div class="panel">
+<h2>📑 09 – Virallinen tekninen kortti</h2>
+<div id="report">Odottamassa suunnittelua...</div>
+</div>
+
+<div class="panel">
+<h2>🗄️ 10 – Tallennetut alukset</h2>
+<div id="saved">Ei tallennettuja aluksia.</div>
+</div>
+
+</main>
+
+<footer>
+PAXIA PRIME • GALAKTINEN ALUSREKISTERI<br>
+Yhdistyneet Tähtikunnat © 3142
+</footer>
+
+<script>
+const names = [
+  // Alkuperäiset nimet
+  "Kosminen Tuomio",
+  "Varjojen Hallitsija",
+  "Tähtien Murskaaja",
+  "Oblivionin Kutsu",
+  "Viimeinen Horisontti",
+  "Musta Aurinko",
+  "Galaktinen Vartija",
+  "Kuolematon",
+  "Aetheriumin Henki",
+  "Kroniumin Kilpi",
+  "Nova Imperator",
+  "Heliosin Perillinen",
+  "Pimeyden Terä",
+  "Taivaallinen Myrsky",
+  "Arcturusin Kruunu",
+  "Tyhjiön Vaeltaja",
+  "Punainen Spektri",
+  "Ääretön Voima",
+  "Tähtisumun Kummitus",
+  "Kvantti-Leijona",
+  "Sydänyön Kosto",
+  "Orionin Keihäs",
+  "Ikuinen Liekki",
+  "Andromedan Kyynel",
+  "Kaaoksen Airut",
+  "Supernovan Raivo",
+  "Valkoinen Kääpiö",
+  "Ajan Vartija",
+  "Eclipse",
+  "Pimeän Aineen Metsästäjä",
+  "Valon Tuoja",
+  "Hyperionin Vasara",
+  "Tähtien Kutoja",
+  "Kohtalon Sinetti",
+  "Nebulan Varjo",
+  "Avaruuden Susihukka",
+  "Kylmä Tähti",
+  "Säteilyn Valtias",
+
+  // Uudet raskaat taistelualukset ja lippulaivat
+  "Rautainen Tahto",
+  "Imperiumin Nyrkki",
+  "Titaanien Raivo",
+  "Sotavasara",
+  "Tuomiopäivän Airut",
+  "Galaksin Valtikka",
+  "Murtumaton Linnake",
+  "Tulimyrsky",
+  "Koston Liekki",
+  "Teräksen Sielu",
+  "Valtaistuimen Varjo",
+  "Keisarin Miekka",
+
+  // Uudet tiedustelu-, salakuljetus- ja piraattialukset
+  "Verinen Kuunsirppi",
+  "Aavekulkija",
+  "Tyhjiön Kuiskaus",
+  "Musta Kyy",
+  "Hiljainen Saalistaja",
+  "Piraattien Kirous",
+  "Karmiinipunainen Kummitus",
+  "Yön Haukka",
+  "Hylkiön Onni",
+  "Varjojen Siipi",
+  "Salama-Arpi",
+  "Kallokomeetta",
+
+  // Uudet mystiset, tieteelliset ja syvän avaruuden alukset
+  "Aetheriumin Silmä",
+  "Singulariteetti",
+  "Tähtien Laulu",
+  "Unen Nielijä",
+  "Kvantti-Aave",
+  "Ikuisuuden Kaiku",
+  "Sielujen Lautturi",
+  "Kosmoksen Lähde",
+  "Tapahtumahorisontti",
+  "Kristallikruunu",
+  "Ajan Virta",
+  "Valon Murros",
+
+  // Uudet tutkimus-, kauppa- ja puolustusalukset
+  "Toivon Majakka",
+  "Pohjantähti",
+  "Uuden Aamun Koitto",
+  "Rauhan Tuoja",
+  "Kultainen Karavaani",
+  "Valkoinen Siipi",
+  "Vega-Vaeltaja",
+  "Horisontin Etsijä",
+  "Tähtien Opas",
+  "Marsin Leijona",
+  "Hopeinen Nuoli",
+  "Liiton Kilpi"
+];
+
+function randomName(){
+ const name=names[Math.floor(Math.random()*names.length)];
+ document.getElementById("name").value=name;
+ calculate();
+}
+
+const hulls={
+W36:{
+ name:"W36 Puolustusristeilijä",
+ price:150000000,
+ speed:25,
+ armor:90,
+ power:100,
+ energy:130,
+ icon:"🛡️",
+ desc:"D-LUOKKA • Raskas puolustusristeilijä",
+ info:"Kronium-komposiittipanssari, lähitorjuntapatterit ja magneettiset vetosäteet."
+},
+
+Q93:{
+ name:"Q93 Taisteluristeilijä",
+ price:180000000,
+ speed:65,
+ armor:90,
+ power:110,
+ energy:125,
+ icon:"🚀",
+ desc:"D-LUOKKA • Lippulaiva",
+ info:"Aetherium-Oblivioni-energiakilpi, modulaariset evakuointitilat ja raskas puolustusaseistus."
+},
+
+E17:{
+ name:"E17 Tiedusteluhävittäjä",
+ price:12000000,
+ speed:125,
+ armor:25,
+ power:35,
+ energy:75,
+ icon:"👁️",
+ desc:"A-LUOKKA • Häivetiedustelualus",
+ info:"Oblivioni-häivepinnoite, kehittyneet sensorit ja tiedustelujärjestelmät."
+},
+
+E29:{
+ name:"E29 Nopea saattajahävittäjä",
+ price:18000000,
+ speed:140,
+ armor:45,
+ power:90,
+ energy:95,
+ icon:"🛸",
+ desc:"A-LUOKKA • Nopea torjuntahävittäjä",
+ info:"Tehostettu jälkipolttojärjestelmä, kaksoisplasmakanuunat ja torjuntaohjukset."
+},
+
+U44:{
+ name:"U44 Pitkän matkan tutkimusalus",
+ price:35000000,
+ speed:110,
+ armor:50,
+ power:15,
+ energy:90,
+ icon:"🔭",
+ desc:"A-LUOKKA • Syväavaruuden tutkimusalus",
+ info:"Suljettu ekosysteemi, pitkäkestoiset poimumoottorit ja mineraalien etsintäluotaimet."
+},
+
+T19:{
+ name:"T19 Sumualueiden partiofregatti",
+ price:45000000,
+ speed:70,
+ armor:75,
+ power:75,
+ energy:90,
+ icon:"🌌",
+ desc:"C-LUOKKA • Sumualueiden partioalus",
+ info:"Kvanttitutkat, ionitykit ja erikoisvarustus kaasusumuissa sekä ionimyrskyissä toimimiseen."
+},
+
+V27:{
+ name:"V27 Jään tutkimusfregatti",
+ price:40000000,
+ speed:60,
+ armor:85,
+ power:35,
+ energy:85,
+ icon:"❄️",
+ desc:"C-LUOKKA • Kryogeenisten alueiden tutkimusalus",
+ info:"Lämpöplasmaleikkurit, kryogeeniset laboratoriot ja aktiivinen lämmitysjärjestelmä."
+},
+
+QM36:{
+ name:"QM36 Avaruussairaala",
+ price:65000000,
+ speed:55,
+ armor:90,
+ power:0,
+ energy:110,
+ icon:"🏥",
+ desc:"C-LUOKKA • Aseeton lääkintä- ja pelastusfregatti",
+ info:"Aetherium-leikkaussalit, automaattiset puolustuslaserit ja pelastamiseen tarkoitetut vetosäteet."
+},
+
+O2:{
+ name:"O2 Kaivostukialus",
+ price:65000000,
+ speed:25,
+ armor:85,
+ power:10,
+ energy:90,
+ icon:"🏭",
+ desc:"E-LUOKKA • Liikkuva teollisuusjalostamo",
+ info:"Jättimäinen liikkuva jalostamo ja satojen työntekijöiden asuttama biosfääri."
+},
+
+H2:{
+ name:"H2 Kaivosalus",
+ price:3500000,
+ speed:80,
+ armor:35,
+ power:15,
+ energy:45,
+ icon:"⛏️",
+ desc:"E-LUOKKA • Pieni teollinen kaivosalus",
+ info:"Varustettu vahvistetulla keulapanssarilla, plasma- ja laserporilla."
+},
+
+G32:{
+ name:"G32 Tähdensiirtäjä",
+ price:900000000,
+ speed:150,armor:815,power:850,energy:820,
+ icon:"🌌",desc:"S-LUOKKA • Tähtienkaappaava megastruktuuri",
+ info:"Kaappaa tähtiä ja singulariteetteja onttoon keskustaansa."
+},
+T25:{
+ name:"T25 Monitoimisukkula",
+ price:45000000,
+ speed:85,armor:45,power:8,energy:55,
+ icon:"🛸",desc:"S-LUOKKA • Logistiikka- ja kuljetusalus",
+ info:"Varustettu VTOL- ja ECM-järjestelmillä."
+},
+E4:{
+ name:"E4 Taisteluhävittäjä",price:2000000,
+ speed:95,armor:20,power:25,energy:35,
+ icon:"🛸",desc:"A-LUOKKA • Taisteluhävittäjä"
+},
+V12:{
+ name:"V12 Vartiofregatti",price:12000000,
+ speed:75,armor:55,power:45,energy:50,
+ icon:"🚀",desc:"C-LUOKKA • Vartioalus"
+},
+H56:{
+ name:"H56 Raskas Pommittaja",price:25000000,
+ speed:35,armor:65,power:85,energy:60,
+ icon:"💣",desc:"B-LUOKKA • Raskas pommittaja"
+},
+Y72:{
+ name:"Y72 Taisteluristeilijä",price:90000000,
+ speed:50,armor:90,power:85,energy:80,
+ icon:"🚀",desc:"D-LUOKKA • Laivaston lippulaiva"
+},
+Z53:{
+ name:"Z53 Lentotukialus",price:120000000,
+ speed:45,armor:95,power:55,energy:90,
+ icon:"🛸",desc:"D-LUOKKA • Lentävä tukikohta"
+},
+X68:{
+ name:"X68 Piiritysalus",price:180000000,
+ speed:20,armor:100,power:100,energy:100,
+ icon:"⚔️",desc:"D-LUOKKA • Giga-piiritysalus"
+}
+};
+
+const engines={
+standard:{price:500000,speed:5,energy:5,name:"Standardi plasma"},
+ion:{price:2000000,speed:15,energy:10,name:"Ionimoottori"},
+oblivion:{price:12000000,speed:30,energy:25,name:"Oblivioni-poimumoottori"},
+quantum:{price:25000000,speed:45,energy:35,name:"Kvanttimoottori"},
+quantumjump:{price:50000000,speed:75,energy:45,name:"Kvanttihyppyreaktori"}
+};
+// Tavallinen panssari – EI energiankulutusta
+const armors = {
+
+    none: {
+        price: 0,
+        armor: 0,
+        energy: 0,
+        name: "Ei erillistä panssaria"
+    },
+
+    titaani: {
+        price: 500000,
+        armor: 10,
+        energy: 0,
+        name: "Titaanipanssari"
+    },
+
+    kronium: {
+        price: 10000000,
+        armor: 30,
+        energy: 0,
+        name: "Kronium-panssari"
+    },
+
+    aetherium: {
+        price: 18000000,
+        armor: 50,
+        energy: 0,
+        name: "Aetherium-panssari"
+    },
+
+    oblivion: {
+        price: 35000000,
+        armor: 85,
+        energy: 0,
+        name: "Oblivion-panssari"
+    }
+
+};
+
+// Energiakilvet – kuluttavat energiaa
+const shields = {
+    none: {
+        price: 0,
+        armor: 0,
+        energy: 0,
+        name: "Ei energiakilpeä"
+    },
+
+    basic: {
+        price: 1000000,
+        armor: 15,
+        energy: 5,
+        name: "Perussuojakilpi"
+    },
+
+    plasma: {
+        price: 2000000,
+        armor: 25,
+        energy: 20,
+        name: "Plasmasuojakilpi"
+    },
+
+    aetherium: {
+        price: 15000000,
+        armor: 45,
+        energy: 30,
+        name: "Aetherium-Oblivioni-kilpi"
+    },
+
+    titanium: {
+        price: 30000000,
+        armor: 100,
+        energy: 60,
+        name: "Titaani-energiakilpi"
+    }
+};
+
+const weapons={
+plasma:{price:1000000,power:12,energy:5,name:"Plasmapatteri"},
+laser:{price:1500000,power:15,energy:8,name:"Laserjärjestelmä"},
+railgun:{price:8000000,power:35,energy:15,name:"RT7-raidetykki"},
+tupla:{price:10000000,power:50,energy:40,name:"Kaksoisplasmatorpedojärjestelmä"},
+turbo:{price:12000000,power:45,energy:20,name:"Raskas turbolaser"},
+kvanttitykki:{price:20000000,power:50,energy:28,name:"QX-90 Kvantti-tykki"},
+mega:{price:30000000,power:100,energy:35,name:"Giga-magma-tykki"},
+emp:{price:3000000,power:15,energy:12,name:"EMP-järjestelmä"},
+none:{price:0,power:0,energy:0,name:"Ei asetta"}
+};
+
+const modules={
+cargo:"Logistiikka ja materiaalikuljetus",
+troops:"Joukkojenkuljetus",
+medical:"Lääkintäosasto",
+diplomatic:"Diplomaattinen kuljetus",
+special:"Taktiset erikoisoperaatiot"
+};
+
+const $=id=>document.getElementById(id);
+const fmt=n=>Math.round(n).toLocaleString("fi-FI");
+
+$("owner").addEventListener("change",()=>{
+ $("customOwner").style.display=
+ $("owner").value==="custom"?"block":"none";
+ calculate();
+});
+
+function calculate(){
+
+ const id=$("hull").value;
+
+ const isO2=id==="O2";
+ const isH2=id==="H2";
+ const isMining=isO2||isH2;
+
+ const h=hulls[id];
+
+ $("miningPanel").style.display=
+ isMining?"block":"none";
+
+ if(isMining){
+   $("miningInfo").textContent=h.info;
+ }
+const e = engines[$("engine").value];
+
+const a = armors[$("shield").value];
+
+const s = shields[$("shield2").value];
+
+let w = weapons[$("weapon").value];
+
+let w2 = weapons[$("weapon2").value];
+
+const isT25=id==="T25";
+const isG32=id==="G32";
+const isQM36=id==="QM36";
+
+ $("t25Panel").style.display=isT25?"block":"none";
+
+
+if(isQM36){
+  w=weapons.none;
+  w2=weapons.none;
+}
+
+ let extra=0;
+ let moduleName="Ei erityismoduulia";
+ let t25Weapon="Ei aseistusta";
+
+ if(isT25){
+   moduleName=modules[$("module").value];
+   const tw=$("t25weapon").value;
+   extra=tw==="light"?200000:800000;
+   t25Weapon=tw==="light"?
+   "Kevyet puolustuslaserit":
+   "Parannetut puolustuslaserit";
+ }
+
+let miningCost=0;
+
+if(isMining){
+
+ const equipment=$("miningEquipment").value;
+ const mode=$("miningMode").value;
+
+ const equipmentPrices={
+   standard:0,
+   advanced:5000000,
+   elite:15000000
+ };
+
+ const modePrices={
+   kronium:1000000,
+   oblivioni:3000000,
+   aetherium:5000000,
+   general:0
+ };
+
+ miningCost=equipmentPrices[equipment]+modePrices[mode];
+}
+
+// Kokonaishinta
+let price =
+    h.price +
+    e.price +
+    a.price +
+    s.price +
+    w.price +
+    w2.price +
+    extra +
+    miningCost;
+
+
+// Nopeus
+let speed = h.speed + e.speed;
+
+
+// Panssarointi
+// Tavallinen panssari ja energiakilpi lisäävät suojausta.
+let armor = h.armor + a.armor + s.armor;
+
+
+// Tulivoima
+let power = h.power + w.power + w2.power;
+
+
+// Energiankulutus
+// Tavallinen panssari EI lisää energiankulutusta.
+let energy =
+    h.energy +
+    e.energy +
+    s.energy +
+    w.energy +
+    w2.energy;
+
+
+ $("shipicon").textContent=h.icon;
+ $("shiptitle").textContent=h.name;
+ $("shipdesc").textContent=h.desc;
+ $("specialInfo").textContent=h.info||"Vakiomallinen avaruusalus.";
+ $("price").textContent=fmt(price)+" krediittiä";
+
+ const stats=[
+ ["Nopeus LY/S (Valovuotta sekunnissa)",speed],
+ ["Suojaus",armor],
+ ["Tulivoima",power],
+ ["Energiankulutus",energy]
+ ];
+
+ $("stats").innerHTML=stats.map(([n,v])=>`
+ <div class="stat">
+ <div class="statline"><span>${n}</span><strong>${v}</strong></div>
+<div class="bar"><div class="fill" style="width:${Math.min(100,v/2)}%"></div></div>
+ </div>`).join("");
+
+ let owner=$("owner").value==="custom"?
+ $("customName").value||"Nimeämätön itsenäinen tähtikunta":
+ $("owner").value;
+
+ let report=
+ "ALUKSEN NIMI: "+$("name").value+
+ "\nOMISTAJA: "+owner+
+ "\nALUSLUOKKA: "+h.name+
+ "\nMOOTTORI: "+e.name+
+"\nPANSSARI: "+a.name+
+"\nENERGIAKILPI: "+s.name+
+ "\nASEISTUS: "+(isT25||isQM36?
+ (isT25?t25Weapon:"Ei tavanomaista aseistusta"):
+ w.name+" + "+w2.name)+
+ "\nNOPEUS: "+speed+""+ " LY/S"
+ "\nPANSSAROINTI: "+armor+""+
+ "\nTULIVOIMA: "+power+""+
+ "\nENERGIAN KULUTUS: "+energy+"";
+
+ if(isT25){
+ report+="\nMODULAARINEN RAHTITILA: "+moduleName+
+ "\nVTOL: Kyllä"+
+ "\nECM: Kyllä";
+ }
+
+ if(isG32){
+ report+="\nSINGULARITEETTISUOJA: Kyllä"+
+ "\nAIKA-AVARUUDEN POIMUTTAJAT: Kyllä";
+ }
+ 
+ if(isO2){
+ report+="\nTEOLLISUUSTYYPPI: Liikkuva malmijalostamo";
+ report+="\nTYÖNTEKIJÄBIOSFÄÄRI: Kyllä";
+ report+="\nMALMIN LOUHINTA: Ei";
+ report+="\nMALMIN JALOSTUS: Kyllä";
+}
+
+if(isH2){
+ report+="\nTEOLLISUUSTYYPPI: Kaivosalus";
+ report+="\nPLASMAPORAT: Kyllä";
+ report+="\nLASERPORA: Kyllä";
+ report+="\nKINEETTISET MURTOVASARAT: Kyllä";
+ report+="\nVETOSÄTEET: Kyllä";
+}
+
+if(isMining){
+
+ const mode=$("miningMode").value;
+ const equipment=$("miningEquipment").value;
+
+ const modeNames={
+   kronium:"Kronium",
+   oblivioni:"Oblivioni",
+   aetherium:"Aetherium",
+   general:"Yleinen malmi"
+ };
+
+ const equipmentNames={
+   standard:"Perusvarustus",
+   advanced:"Tehostettu teollisuusvarustus",
+   elite:"Edistynyt automaattinen järjestelmä"
+ };
+
+ report+="\nKAIVOSTOIMINTO: "+modeNames[mode];
+ report+="\nKAIVOSVARUSTUS: "+equipmentNames[equipment];
+ report+="\nKAIVOSTOIMINNON LISÄHINTA: "+
+ fmt(miningCost)+" krediittiä";
+}
+
+ report+="\nKOKONAISHINTA: "+fmt(price)+" krediittiä"+
+ "\nREKISTERI: PAXIA PRIME"+
+ "\nTILA: SUUNNITELTU";
+
+ $("report").textContent=report;
+}
+
+function getData(){
+ return {
+ name:$("name").value,
+ owner:$("owner").value,
+ customName:$("customName").value,
+ hull:$("hull").value,
+ engine:$("engine").value,
+ shield:$("shield").value,
+ weapon:$("weapon").value,
+ weapon2:$("weapon2").value,
+ module:$("module").value,
+ t25weapon:$("t25weapon").value,
+ miningMode:$("miningMode").value,
+ miningEquipment:$("miningEquipment").value
+ };
+}
+
+function saveShip(){
+ let list=JSON.parse(localStorage.getItem("shipsV2")||"[]");
+ list.push(getData());
+ localStorage.setItem("shipsV2",JSON.stringify(list));
+ showSaved();
+ alert("Alus rekisteröity!");
+}
+
+function loadShip(i){
+ let a=JSON.parse(localStorage.getItem("shipsV2")||"[]")[i];
+ Object.keys(a).forEach(k=>$(k).value=a[k]);
+ $("owner").dispatchEvent(new Event("change"));
+ calculate();
+}
+
+function deleteShip(i){
+ let list=JSON.parse(localStorage.getItem("shipsV2")||"[]");
+ list.splice(i,1);
+ localStorage.setItem("shipsV2",JSON.stringify(list));
+ showSaved();
+}
+
+function showSaved(){
+ let list=JSON.parse(localStorage.getItem("shipsV2")||"[]");
+ $("saved").innerHTML=list.length?list.map((a,i)=>
+ `<div style="padding:10px;border-bottom:1px solid #23547a">
+ <b>${i+1}. ${escapeHTML(a.name)}</b>
+ <button onclick="loadShip(${i})">Lataa</button>
+ <button onclick="deleteShip(${i})">Poista</button>
+ </div>`).join(""):"Ei tallennettuja aluksia.";
+}
+
+function escapeHTML(s){
+ return String(s).replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",
+ '"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+function downloadShip(){
+ calculate();
+ const blob=new Blob([$("report").textContent],
+ {type:"text/plain;charset=utf-8"});
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download="galaktinen-alus.txt";
+ a.click();
+ URL.revokeObjectURL(a.href);
+}
+
+[
+ "name",
+ "customName",
+ "hull",
+ "engine",
+ "shield",
+ "shield2",
+ "weapon",
+ "weapon2",
+ "module",
+ "t25weapon",
+ "miningMode",
+ "miningEquipment"
+].forEach(id=>{
+ $(id).addEventListener("change",calculate);
+ $(id).addEventListener("input",calculate);
+});
+
+["miningMode","miningEquipment"].forEach(id=>{
+ $(id).addEventListener("change",calculate);
+});
+
+calculate();
+showSaved();
+</script>
+</body>
+</html>
